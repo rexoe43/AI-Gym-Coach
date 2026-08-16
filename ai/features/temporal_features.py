@@ -2,8 +2,10 @@ import numpy as np
 
 def calculate_temporal_features(features_sequence):
 
+    temporal_features = {}
+
     if len(features_sequence) < 2:
-        return {}
+        return temporal_features
 
     current = features_sequence[-1]
     previous = features_sequence[-2]

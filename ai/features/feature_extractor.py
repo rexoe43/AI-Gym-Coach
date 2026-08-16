@@ -22,7 +22,7 @@ class FeatureExtractor:
     def process_landmark_file(self, input_pkl, output_pkl):
 
         if not os.path.exists(input_pkl):
-            print("Error: not found {input_pk1}")
+            print("Error: not found {input_pkl}")
             return None
 
         with open(input_pkl, 'rb') as f:
@@ -33,6 +33,7 @@ class FeatureExtractor:
         total_frames = data['total_frames']
 
         features_sequence = []
+        frames_processed = 0
 
         for frame_data in landmarks_sequence:
             landmarks = frame_data['landmarks']
@@ -44,14 +45,21 @@ class FeatureExtractor:
 
                     temporal = calculate_temporal_features(features_sequence + [features])
 
-                    features.update(temporal)
+
+                    if temporal is not None:
+                        features.update(temporal)
 
                     features['frame'] = frame_data['frame']
                     features_sequence.append(features)
+                    frames_processed += 1
+
+        if frames_processed == 0:
+            print("Frames not processed for: {video_name}")
+            return None
 
         output_data = {
             'video_name': video_name,
-            'total_frames': len(features_sequence),
+            'total_frames': frames_processed,
             'features_sequence': features_sequence
         }
 
@@ -84,8 +92,8 @@ def main():
     landmark_files = [f for f in os.listdir(landmarks_folder) if f.endswith('.pkl') and not f.endswith('_visualized.pkl')]
 
     if not landmark_files:
-        print("ladmarks files not founded in:", landmarks_folder)
-        print("Execute first: preporcessing/video_to_landmarks.py")
+        print("landmarks files not found in:", landmarks_folder)
+        print("Execute first: preprocessing/video_to_landmarks.py")
         return
 
     print(f"\n Files with landmarks founded: {len(landmark_files)}")
@@ -114,6 +122,14 @@ def main():
     print("\n Summary:")
 
     print("   - Caracteristics saved in: dataset/processed/features")
+
+    features_files = os.listdir('dataset/processed/features/') if os.path.exists('dataset/processed/features/') else []
+    if features_files:
+        print(f" Files generated: {len(features_files)}")
+        for f in features_files:
+            print(f" * {f}")
+    else:
+        print(" No files were generated")
 
 if __name__ == "__main__":
     main()
