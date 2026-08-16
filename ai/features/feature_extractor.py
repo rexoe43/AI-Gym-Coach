@@ -28,7 +28,7 @@ class FeatureExtractor:
         with open(input_pkl, 'rb') as f:
             data = pickle.load(f)
 
-        lendmarks_sequence = data['landmarks_data']
+        landmarks_sequence = data['landmarks_data']
         video_name = data['video_name']
         total_frames = data['total_frames']
 
