@@ -1,0 +1,51 @@
+{
+  "exercises": [
+    "squat"
+  ],
+  "labels": [
+    "correct",
+    "incomplete_range"
+  ],
+  "total_samples": 121,
+  "total_repetitions": 6,
+  "features": [
+    "knee_angle_right",
+    "knee_angle_left",
+    "hip_angle_right",
+    "hip_angle_left",
+    "elbow_angle_right",
+    "elbow_angle_left",
+    "shoulder_angle_right",
+    "shoulder_angle_left",
+    "torso_length",
+    "knee_angle_right_velocity",
+    "knee_angle_left_velocity",
+    "hip_angle_right_velocity",
+    "hip_angle_left_velocity",
+    "elbow_angle_right_velocity",
+    "elbow_angle_left_velocity",
+    "shoulder_angle_right_velocity",
+    "shoulder_angle_left_velocity",
+    "knee_angle_right_acceleration"
+  ],
+  "frame_columns": [
+    "knee_angle_right",
+    "knee_angle_left",
+    "hip_angle_right",
+    "hip_angle_left",
+    "elbow_angle_right",
+    "elbow_angle_left",
+    "shoulder_angle_right",
+    "shoulder_angle_left",
+    "torso_length",
+    "knee_angle_right_velocity",
+    "knee_angle_left_velocity",
+    "hip_angle_right_velocity",
+    "hip_angle_left_velocity",
+    "elbow_angle_right_velocity",
+    "elbow_angle_left_velocity",
+    "shoulder_angle_right_velocity",
+    "shoulder_angle_left_velocity",
+    "knee_angle_right_acceleration"
+  ]
+}
