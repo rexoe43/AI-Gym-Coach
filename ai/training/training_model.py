@@ -38,7 +38,7 @@ class ModelTrainer:
         exclude_cols = ['sample_id', 'exercise', 'label', 'frame_sequence', 'total_frames']
         feature_cols = [col for col in df.columns if col not in exclude_cols]
         
-        print(f"\n🔍 Características encontradas: {len(feature_cols)}")
+        print(f"\n Caracteristics found: {len(feature_cols)}")
         
         print("\n Adding caracteristics for reps...")
         
