@@ -6,8 +6,8 @@
     "correct",
     "incomplete_range"
   ],
-  "total_samples": 121,
-  "total_repetitions": 6,
+  "total_samples": 297,
+  "total_repetitions": 11,
   "features": [
     "knee_angle_right",
     "knee_angle_left",
