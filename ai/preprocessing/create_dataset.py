@@ -15,7 +15,7 @@ class DatasetCreator:
             'total_repetitions': 0,
             'features': []
         }
-        print("✅ Dataset creator initialized")
+        print(" Dataset creator initialized")
 
     def segment_repetitions(self, features_sequence, min_frames=5):
         """
