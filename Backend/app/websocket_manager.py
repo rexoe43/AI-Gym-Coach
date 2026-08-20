@@ -8,7 +8,7 @@ import numpy as np
 
 from .pose_detector import pose_detector
 from .predictor import predict_exercise
-from .repetiton_counter import repetition_counter
+from .repetition_counter import repetition_counter
 from .feature_extractor import extract_features_from_landmarks
 
 class WebSocketManager:
@@ -44,11 +44,11 @@ class WebSocketManager:
             if frame is None:
                 return {'error': 'No se pudo decodificar el frame'}
             
-            landmarks, annotated_frame = pose_detector.process_frame(frame)
+            landmarks = pose_detector.process_frame(frame)
             
             results = {
                 'has_landmarks': landmarks is not None,
-                'frame': None,
+                'landmarks': landmarks,
                 'prediction': None,
                 'repetition_count': repetition_counter.count,
                 'exercise': 'squat'
@@ -76,12 +76,6 @@ class WebSocketManager:
                 
                 self.training_sessions[client_id]['landmarks_history'].append(landmarks)
                 self.training_sessions[client_id]['predictions_history'].append(prediction)
-            
-            _, buffer = cv2.imencode('.jpg', annotated_frame)
-            annotated_frame_b64 = base64.b64encode(buffer).decode('utf-8')
-            results['frame'] = annotated_frame_b64
-
-            print(f" Frame annotated, sending: {len(annotated_frame_b64)} caracters")
             
             return results
             

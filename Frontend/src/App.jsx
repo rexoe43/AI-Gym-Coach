@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// frontend/src/App.jsx
+import React, { useState, useEffect, useCallback } from 'react';
 import { useWebSocket } from './hooks/useWebSocket';
 import Camera from './components/Camera';
 import Stats from './components/Stats';
@@ -14,35 +15,50 @@ function App() {
   const [techniqueScore, setTechniqueScore] = useState(0);
   const [status, setStatus] = useState('Esperando...');
   const [prediction, setPrediction] = useState(null);
-  const [confidence, setConfidence] = useState(0);  
-  const [annotatedFrame, setAnnotatedFrame] = useState(null);
-
+  const [confidence, setConfidence] = useState(0);
+  const [landmarks, setLandmarks] = useState(null);
+  const [debugInfo, setDebugInfo] = useState('Esperando...');
+  
   const wsUrl = `ws://localhost:8000/ws/${clientId}`;
   const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
 
+  // ✅ Manejar mensajes del WebSocket
   useEffect(() => {
     if (lastMessage) {
+      console.log('📩 Mensaje recibido:', lastMessage);
+      
       const { type, data } = lastMessage;
       
       if (type === 'result' && data) {
-        if (data.frame) {
-          setAnnotatedFrame(data.frame);
+        if (data.landmarks) {
+          setLandmarks(data.landmarks);
+        } else if (data.has_landmarks === false) {
+          setLandmarks(null);
         }
         
+        // ✅ Actualizar repeticiones
+        if (data.repetition_count !== undefined) {
+          setReps(data.repetition_count);
+        }
+        
+        // ✅ Actualizar predicción
         if (data.prediction) {
           const pred = data.prediction;
+          console.log('🧠 Predicción:', pred);
           setPrediction(pred.class);
           setConfidence(pred.confidence || 0);
           
           if (pred.class === 'correct') {
-            setStatus('Correct');
+            setStatus('✅ Correcto');
             if (data.repetition_completed) {
               setCorrectReps(prev => prev + 1);
             }
           } else if (pred.class === 'incomplete_range') {
-            setStatus('Improvable');
+            setStatus('⚠️ Mejorable');
+          } else if (pred.class === 'no_detection') {
+            setStatus('👤 No se detecta cuerpo');
           } else {
-            setStatus('Unknown');
+            setStatus('❓ Desconocido');
           }
           
           if (pred.probabilities) {
@@ -50,47 +66,70 @@ function App() {
             setTechniqueScore(Math.round(probCorrect * 100));
           }
         }
+        
+        // ✅ Actualizar estado de landmarks
+        if (data.has_landmarks !== undefined) {
+          setDebugInfo(data.has_landmarks ? '🟢 Landmarks detectados' : '🟡 Sin landmarks');
+        }
+      }
+      
+      if (type === 'counter_reset') {
+        console.log('🔄 Contador reiniciado');
+        setDebugInfo('🔄 Contador reiniciado');
       }
     }
   }, [lastMessage]);
 
-  const handleFrame = (frameData) => {
-    if (isActive && isConnected) {
-        sendMessage({
-            type: 'frame',
-            data: frameData
-        });
+  // ✅ Manejar frames desde la cámara
+  const handleFrame = useCallback((frameData) => {
+    if (isConnected) {
+      sendMessage({
+        type: 'frame',
+        data: frameData
+      });
     }
-  };
-  
+  }, [isActive, isConnected, sendMessage]);
+
+  // ✅ Iniciar entrenamiento
   const handleStart = () => {
-    console.log("Starting training..");
+    console.log("▶️ Iniciando entrenamiento...");
     setIsActive(true);
+    setLandmarks(null);
+    setDebugInfo('🟡 Esperando frames...');
     sendMessage({
       type: 'start_training',
       exercise: exercise
     });
   };
 
+  // ✅ Detener entrenamiento
   const handleStop = () => {
-    console.log("Stopping training...")
+    console.log("⏹ Deteniendo entrenamiento...");
     setIsActive(false);
   };
 
+  // ✅ Reiniciar
   const handleReset = () => {
-    console.log("Restarting counter..")
+    console.log("🔄 Reiniciando...");
     setReps(0);
     setCorrectReps(0);
     setTechniqueScore(0);
     setStatus('Esperando...');
     setPrediction(null);
     setConfidence(0);
+    setLandmarks(null);
+    setDebugInfo('🔄 Reiniciado');
+    
+    if (isActive) {
+      setIsActive(false);
+    }
+    
     sendMessage({
       type: 'reset_counter'
     });
   };
 
- return (
+  return (
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#111827',
@@ -98,7 +137,6 @@ function App() {
       padding: '16px'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header */}
         <header style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h1 style={{
             fontSize: '48px',
@@ -111,20 +149,12 @@ function App() {
             AI GYM COACH
           </h1>
           <p style={{ color: '#9ca3af', marginTop: '8px' }}>
-            {isConnected ? 'Connected' : 'Desconnected'}
+            {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
           </p>
           <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '4px' }}>ID: {clientId}</p>
+          <p style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px' }}>📊 {debugInfo}</p>
         </header>
 
-        <div style={{ marginBottom: '24px'}}>
-            <Camera
-                onFrame={handleFrame}
-                iSActive={isActive}
-                annotatedFrame={annotatedFrame}
-            />
-        </div>
-
-        {/* Connection status alert */}
         {!isConnected && (
           <div style={{
             backgroundColor: 'rgba(234, 179, 8, 0.1)',
@@ -135,20 +165,19 @@ function App() {
             textAlign: 'center'
           }}>
             <p style={{ color: '#f59e0b', margin: 0 }}>
-              Connecting to the server, please verify if the backend is running
+              ⚠️ Conectando al servidor... Asegúrate de que el backend esté corriendo
             </p>
           </div>
         )}
 
-        {/* Camera */}
         <div style={{ marginBottom: '24px' }}>
           <Camera 
             onFrame={handleFrame}
             isActive={isActive}
+            landmarks={landmarks}
           />
         </div>
 
-        {/* Controls */}
         <div style={{ marginBottom: '24px' }}>
           <Controls
             isActive={isActive}
@@ -160,7 +189,6 @@ function App() {
           />
         </div>
 
-        {/* Stats */}
         <div style={{ marginBottom: '24px' }}>
           <Stats
             reps={reps}
@@ -170,23 +198,17 @@ function App() {
           />
         </div>
 
-        {/* Feedback */}
         <div style={{ marginBottom: '24px' }}>
           <Feedback
             prediction={prediction}
             confidence={confidence}
-            error={!isConnected ? 'Didnt connect to the server' : null}
+            error={!isConnected ? 'No conectado al servidor' : null}
           />
         </div>
 
-        {/* Connection status */}
         <div style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280' }}>
           <p style={{ margin: 0 }}>
-            {isConnected ? (
-              'Connected to the server'
-            ) : (
-              ' Connecting to the server...'
-            )}
+            {isConnected ? '🟢 Conectado al servidor' : '🔴 Conectando al servidor...'}
           </p>
         </div>
       </div>
