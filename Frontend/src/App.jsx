@@ -17,7 +17,7 @@ function App(){
     const [confidence, setConfidence] = useState(0);
     const [feedback, setFeedback] = useState(null);
 
-    const wsUrl = `ws://localhost:8000/ws${clientId}`;
+    const wsUrl = `ws://localhost:8000/ws/${clientId}`;
     const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
 
     useEffect(() => {
