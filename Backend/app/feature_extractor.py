@@ -1,5 +1,4 @@
 import numpy as np
-from .pose_detector import pose_detector
 
 def calculate_angle(p1, p2, p3):
     """Calculate the angle between three points"""
@@ -13,7 +12,7 @@ def calculate_angle(p1, p2, p3):
 
     dot_product = np.dot(ba, bc)
     norm_ba = np.linalg.norm(ba)
-    norm_bc = np.linalg.nomr(bc)
+    norm_bc = np.linalg.norm(bc)
 
     if norm_ba == 0 or norm_bc == 0:
         return 0.0
@@ -22,7 +21,7 @@ def calculate_angle(p1, p2, p3):
     cosine = np.clip(cosine, -1.0, 1.0)
     angle = np.arccos(cosine)
 
-    return np.degress(angle)
+    return np.degrees(angle)
 
 def extract_features_from_landmarks(landmarks):
 
@@ -50,7 +49,7 @@ def extract_features_from_landmarks(landmarks):
     features['elbow_angle_right'] = calculate_angle(
         landmarks[11], landmarks[13], landmarks[15]
     )
-    features['elbow_ngle_left'] = calculate_angle(
+    features['elbow_angle_left'] = calculate_angle(
         landmarks[12], landmarks[14], landmarks[16]
     )
 
@@ -66,10 +65,6 @@ def extract_features_from_landmarks(landmarks):
     shoulder_center = np.array([
         (landmarks[11]['x'] + landmarks[12]['x']) / 2,
         (landmarks[11]['y'] + landmarks[12]['y']) / 2
-    ])
-    hip_center = np.array([
-        (landmarks[23]['x'] + landmarks[24]['x']) / 2,
-        (landmarks[23]['y'] + landmarks[24]['y']) / 2
     ])
     hip_center = np.array([
         (landmarks[23]['x'] + landmarks[24]['x']) / 2,

@@ -29,8 +29,9 @@ const Feedback = ({ prediction, confidence, error }) => {
   }
 
   const isCorrect = prediction === 'correct';
+  const isNeutral = ['no_detection', 'no_model', 'unknown', 'no_landmarks', 'no_features'].includes(prediction);
   const confidencePercent = (confidence * 100).toFixed(1);
-  const borderColor = isCorrect ? '#22c55e' : '#ef4444';
+  const borderColor = isCorrect ? '#22c55e' : isNeutral ? '#6b7280' : '#ef4444';
 
   return (
     <div style={{
@@ -50,10 +51,10 @@ const Feedback = ({ prediction, confidence, error }) => {
           <p style={{
             fontSize: '24px',
             fontWeight: 'bold',
-            color: isCorrect ? '#22c55e' : '#ef4444',
+            color: isCorrect ? '#22c55e' : isNeutral ? '#9ca3af' : '#ef4444',
             margin: '4px 0 0 0'
           }}>
-            {isCorrect ? 'Correct' : 'Improvable'}
+            {isCorrect ? 'Correct' : isNeutral ? 'No score yet' : 'Improvable'}
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -69,7 +70,7 @@ const Feedback = ({ prediction, confidence, error }) => {
         </div>
       </div>
       
-      {!isCorrect && (
+      {!isCorrect && !isNeutral && (
         <div style={{
           marginTop: '16px',
           padding: '12px',
