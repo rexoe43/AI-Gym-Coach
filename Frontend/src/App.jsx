@@ -1,167 +1,185 @@
-import React, {useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWebSocket } from './hooks/useWebSocket';
 import Camera from './components/Camera';
 import Stats from './components/Stats';
 import Feedback from './components/Feedback';
 import Controls from './components/Controls';
 
-function App(){
-    const [clientId] = useState(`user_${Date.now()}`);
-    const [isActive, setIsActive] = useState(false);
-    const [exercise, setExercise] = useState('squat');
-    const [reps, setReps] = useState(0);
-    const [correctReps, setCorrectReps] = useState(0);
-    const [techniqueScore, setTechniqueScore] = useState(0);
-    const [status, setStatus] = useState('Waiting..');
-    const [prediction, setPrediction] = useState(null);
-    const [confidence, setConfidence] = useState(0);
-    const [feedback, setFeedback] = useState(null);
+function App() {
+  const [clientId] = useState(`user_${Date.now()}`);
+  const [isActive, setIsActive] = useState(false);
+  const [exercise, setExercise] = useState('squat');
+  const [reps, setReps] = useState(0);
+  const [correctReps, setCorrectReps] = useState(0);
+  const [techniqueScore, setTechniqueScore] = useState(0);
+  const [status, setStatus] = useState('Esperando...');
+  const [prediction, setPrediction] = useState(null);
+  const [confidence, setConfidence] = useState(0);
+  
+  const wsUrl = `ws://localhost:8000/ws/${clientId}`;
+  const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
 
-    const wsUrl = `ws://localhost:8000/ws/${clientId}`;
-    const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
-
-    useEffect(() => {
-        if (lastMessage) {
-            const { type, data } = lastMessage;
-
-            if (type === 'result' && data) {
-                if (data.repetition_count !== undefined) {
-                    setReps(data.repetition_count);
-                }
-
-                if (data.prediction) {
-                    const pred = data.prediction;
-                    setPrediction(pred.class);
-                    setConfidence(pred.confidence || 0);
-
-                    if(pred.class === 'correct') {
-                        setStatus('Correct');
-                        if (data.repetition_completed) {
-                            setCorrectReps(prev => prev + 1);
-                        }
-                    } else if (pred.class === 'incomplete_range') {
-                        setStatus('Improvable')
-                    } else {
-                        setStatus('Unknown');
-                    }
-
-                    if (pred.probabilities) {
-                        const probCorrect = pred.probabilities.correct || 0;
-                        setTechniqueScore(Math.round(probCorrect * 100));
-                    }
-                }
-
-                if (data.feedback) {
-                    setFeedback(data.feedback);
-                }
+  useEffect(() => {
+    if (lastMessage) {
+      const { type, data } = lastMessage;
+      
+      if (type === 'result' && data) {
+        if (data.repetition_count !== undefined) {
+          setReps(data.repetition_count);
+        }
+        
+        if (data.prediction) {
+          const pred = data.prediction;
+          setPrediction(pred.class);
+          setConfidence(pred.confidence || 0);
+          
+          if (pred.class === 'correct') {
+            setStatus('Correct');
+            if (data.repetition_completed) {
+              setCorrectReps(prev => prev + 1);
             }
+          } else if (pred.class === 'incomplete_range') {
+            setStatus('Improvable');
+          } else {
+            setStatus('Unknown');
+          }
+          
+          if (pred.probabilities) {
+            const probCorrect = pred.probabilities.correct || 0;
+            setTechniqueScore(Math.round(probCorrect * 100));
+          }
         }
-    }, [lastMessage]);
+      }
+    }
+  }, [lastMessage]);
 
-    const handleFrame = (frameData) => {
-        if (isActive && isConnected) {
-            sendMessage({
-                type: 'frame',
-                data: frameData
-            });
-        }
-    };
+  const handleFrame = (frameData) => {
+    if (isActive && isConnected) {
+      sendMessage({
+        type: 'frame',
+        data: frameData
+      });
+    }
+  };
 
-    const handleStart = () => {
-        setIsActive(true);
-        sendMessage({
-            type: 'start_training',
-            exercise: exercise
-        });
-    };
+  const handleStart = () => {
+    setIsActive(true);
+    sendMessage({
+      type: 'start_training',
+      exercise: exercise
+    });
+  };
 
-    const handleStop = () => {
-        setIsActive(false);
-        sendMessage({
-            type: 'stop_training'
-        });
-    };
+  const handleStop = () => {
+    setIsActive(false);
+  };
 
-    const handleReset = () => {
-         setReps(0);
-         setCorrectReps(0);
-         setTechniqueScore(0);
-         setStatus('Waiting...');
-         setPrediction(null);
-         setConfidence(0);
-         sendMessage({
-            type: 'reset_counter'
-         });
+  const handleReset = () => {
+    setReps(0);
+    setCorrectReps(0);
+    setTechniqueScore(0);
+    setStatus('Esperando...');
+    setPrediction(null);
+    setConfidence(0);
+    sendMessage({
+      type: 'reset_counter'
+    });
+  };
 
-    };
+  return (
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#111827',
+      color: 'white',
+      padding: '16px'
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Header */}
+        <header style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{
+            fontSize: '48px',
+            fontWeight: 'bold',
+            background: 'linear-gradient(to right, #6366f1, #a855f7)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            margin: 0
+          }}>
+            AI GYM COACH
+          </h1>
+          <p style={{ color: '#9ca3af', marginTop: '8px' }}>
+            {isConnected ? 'Connected' : 'Desconnected'}
+          </p>
+          <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '4px' }}>ID: {clientId}</p>
+        </header>
 
-    return (
-        <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
-            <div className="max-w-6x1 mx-auto">
-                {/*Header*/}
-                <header className="text-center mb-8">
-                    <h1 className="text-4x1 font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                        AI GYM COACH
-                        </h1>
-                        <p className="text-gray-400 mt-2">
-                            {isConnected ? 'Conected' : 'Desconected'}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">ID: {clientId}</p>
-                </header>
+        {/* Connection status alert */}
+        {!isConnected && (
+          <div style={{
+            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+            border: '1px solid rgba(234, 179, 8, 0.5)',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            textAlign: 'center'
+          }}>
+            <p style={{ color: '#f59e0b', margin: 0 }}>
+              Connecting to the server, please verify if the backend is running
+            </p>
+          </div>
+        )}
 
-                {/*Camera Section*/}
-                <div className="mb-6">
-                    <Camera>
-                        onFrame={handleFrame}
-                        isActive={isActive}
-                    </Camera>
-                </div>
-
-                {/* Controls*/}
-                <div className="mb-6">
-                    <Controls>
-                        isActive={isActive}
-                        onStart={handleStart}
-                        onStop={handleStop}
-                        onReset={handleReset}
-                        exercise={exercise}
-                        onExerciseCHange={setExercise}
-                    </Controls>
-                </div>
-
-                {/*Stats*/}
-                <div className="mb-6">
-                    <Stats>
-                        reps={reps}
-                        correctReps={correctReps}
-                        techniqueScore={techniqueScore}
-                        status={status}
-                    </Stats>
-                </div>
-
-                {/*Feedback*/}
-                <div className="mb-6">
-                    <Feedback>
-                        prediction={prediction}
-                        confidence={confidence}
-                        error={!isConnected ? 'No connected to the server' : null}
-                    </Feedback>
-                </div>
-
-                {/*Connection Status*/}
-                <div className="text-center text-sm text-gray-500">
-                    <p>
-                        {isConnected ? (
-                            'Connected to the server'
-                        ): (
-                            'Connecting to the server...'
-                        )}
-                    </p>
-                </div>
-            </div>
+        {/* Camera */}
+        <div style={{ marginBottom: '24px' }}>
+          <Camera 
+            onFrame={handleFrame}
+            isActive={isActive}
+          />
         </div>
-    );
 
+        {/* Controls */}
+        <div style={{ marginBottom: '24px' }}>
+          <Controls
+            isActive={isActive}
+            onStart={handleStart}
+            onStop={handleStop}
+            onReset={handleReset}
+            exercise={exercise}
+            onExerciseChange={setExercise}
+          />
+        </div>
+
+        {/* Stats */}
+        <div style={{ marginBottom: '24px' }}>
+          <Stats
+            reps={reps}
+            correctReps={correctReps}
+            techniqueScore={techniqueScore}
+            status={status}
+          />
+        </div>
+
+        {/* Feedback */}
+        <div style={{ marginBottom: '24px' }}>
+          <Feedback
+            prediction={prediction}
+            confidence={confidence}
+            error={!isConnected ? 'Didnt connect to the server' : null}
+          />
+        </div>
+
+        {/* Connection status */}
+        <div style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280' }}>
+          <p style={{ margin: 0 }}>
+            {isConnected ? (
+              'Connected to the server'
+            ) : (
+              ' Connecting to the server...'
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default App;
