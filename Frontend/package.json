@@ -1,8 +1,16 @@
 {
+    "name": "ai-gym-coach-Frontend",
+    "version": "0.1.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+
     "dependecies": {
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "react-router-dom": "^6.20.0",
         "axios": "^1.6.0",
         "zustand": "^4.4.0",
         "react-hook-form": "^7.48.0",
