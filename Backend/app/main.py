@@ -55,10 +55,10 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 })
 
             elif message.get('type') == 'reset_counter':
-                from .repetiton_counter import repetition_counter
+                from .repetition_counter import repetition_counter
                 repetition_counter.reset()
                 await websocket.send_json({
-                    'type': 'counter_rest',
+                    'type': 'counter_reset',
                     'count': 0
                 })
 

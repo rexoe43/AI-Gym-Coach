@@ -11,18 +11,16 @@ class PoseDetector:
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
-        self.mp_drawing = mp.solutions.drawing_utils
         print("Pose Detector Initialized")
 
     def process_frame(self, frame):
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.pose.process(rgb_frame)
         landmarks = None
-        annotated_frame = frame.copy()
 
         if results.pose_landmarks:
             landmarks = []
-            for landmark in results.pose_landmarks.landmar:
+            for landmark in results.pose_landmarks.landmark:
                 landmarks.append({
                     'x': landmark.x,
                     'y': landmark.y,
@@ -30,13 +28,7 @@ class PoseDetector:
                     'visibility': landmark.visibility
                 })
 
-            self.mp_drawing.draw_landmarks(
-                annotated_frame,
-                results.pose_landmarks,
-                self.mp_pose.POSE_CONNECTIONS
-            )
-
-        return landmarks, annotated_frame
+        return landmarks
 
     def get_landmars_array(self, landmarks):
         if landmarks is None:
