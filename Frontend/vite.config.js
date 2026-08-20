@@ -16,5 +16,8 @@ export default defineConfig({
                 changeOrigin: true,
             }
         }
+    },
+    optimizeDeps: {
+        include: ['react', 'react-dom', 'react/jsx-runtime']
     }
 })
