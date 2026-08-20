@@ -7,7 +7,7 @@ import Controls from './components/Controls';
 
 function App(){
     const [clientId] = useState(`user_${Date.now()}`);
-    const [isActive, setIsActive] = userState(false);
+    const [isActive, setIsActive] = useState(false);
     const [exercise, setExercise] = useState('squat');
     const [reps, setReps] = useState(0);
     const [correctReps, setCorrectReps] = useState(0);

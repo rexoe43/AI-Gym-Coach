@@ -57,4 +57,4 @@ const Feedback = ({ prediction, confidence, error}) => {
     );
 };
 
-export default FeedBack;
+export default Feedback;
