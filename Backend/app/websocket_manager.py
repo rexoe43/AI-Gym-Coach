@@ -80,6 +80,8 @@ class WebSocketManager:
             _, buffer = cv2.imencode('.jpg', annotated_frame)
             annotated_frame_b64 = base64.b64encode(buffer).decode('utf-8')
             results['frame'] = annotated_frame_b64
+
+            print(f" Frame annotated, sending: {len(annotated_frame_b64)} caracters")
             
             return results
             

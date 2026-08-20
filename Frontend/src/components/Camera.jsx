@@ -1,25 +1,26 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import Webcam from 'react-webcam';
+import React, { useRef, useState, useEffect } from 'react';
 
-const Camera = ({ onFrame, isActive }) => {
-  const webcamRef = useRef(null);
+const Camera = ({ onFrame, isActive, annotatedFrame }) => {
+  const videoRef = useRef(null);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [error, setError] = useState(null);
   const intervalRef = useRef(null);
+  const streamRef = useRef(null);
 
-  const captureFrame = useCallback(() => {
-    if (webcamRef.current && isActive) {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        const base64Data = imageSrc.split(',')[1];
-        onFrame(base64Data);
-      }
-    }
-  }, [isActive, onFrame]);
-
+  // Cap frames
   useEffect(() => {
     if (isActive) {
-      intervalRef.current = setInterval(captureFrame, 100);
+      intervalRef.current = setInterval(() => {
+        if (videoRef.current && videoRef.current.readyState === 4) {
+          const canvas = document.createElement('canvas');
+          canvas.width = videoRef.current.videoWidth || 640;
+          canvas.height = videoRef.current.videoHeight || 480;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(videoRef.current, 0, 0);
+          const frameData = canvas.toDataURL('image/jpeg').split(',')[1];
+          onFrame(frameData);
+        }
+      }, 100);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -33,56 +34,132 @@ const Camera = ({ onFrame, isActive }) => {
         intervalRef.current = null;
       }
     };
-  }, [isActive, captureFrame]);
+  }, [isActive, onFrame]);
 
-  const handleUserMedia = () => {
-    console.log('Camera activated');
-    setIsCameraReady(true);
-    setError(null);
-  };
+  // Iniciar cámara
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 640, height: 480, facingMode: 'user' }
+        });
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          streamRef.current = stream;
+          setIsCameraReady(true);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error de cámara:', err);
+        setError('Verify permissions');
+      }
+    };
 
-  const handleError = (err) => {
-    console.error('Error from camera:', err);
-    setError('I cant access to camera make sure to the permissions are enabled');
-    setIsCameraReady(false);
-  };
+    startCamera();
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
+
+  const showAnnotatedFrame = annotatedFrame && isActive;
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto bg-gray-800 rounded-xl overflow-hidden">
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      maxWidth: '640px',
+      margin: '0 auto',
+      backgroundColor: '#1f2937',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      aspectRatio: '4/3'
+    }}>
       {error ? (
-        <div className="p-8 text-center text-red-400">
-          <p className="text-xl">{error}</p>
-          <p className="mt-2 text-sm text-gray-400">Make sure the camera is connected and the permissions are enabled.</p>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          padding: '20px',
+          textAlign: 'center',
+          color: '#ef4444'
+        }}>
+          <p>⚠️ {error}</p>
         </div>
       ) : (
         <>
-          <Webcam
-            ref={webcamRef}
-            audio={false}
-            screenshotFormat="image/jpeg"
-            videoConstraints={{
-              width: 640,
-              height: 480,
-              facingMode: "user"
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: showAnnotatedFrame ? 'none' : 'block', 
+              opacity: isActive ? 1 : 0.6
             }}
-            onUserMedia={handleUserMedia}
-            onUserMediaError={handleError}
-            className="w-full h-auto"
           />
-          {!isCameraReady && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-900/80">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mx-auto"></div>
-                <p className="mt-4 text-gray-400">Starting camera...</p>
-              </div>
+          
+          {showAnnotatedFrame && (
+            <img
+              src={`data:image/jpeg;base64,${annotatedFrame}`}
+              alt="Análisis en tiempo real"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                pointerEvents: 'none'
+              }}
+            />
+          )}
+
+          {/* Overlay  */}
+          {!isActive && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(17, 24, 39, 0.7)',
+              color: '#9ca3af',
+              fontSize: '20px',
+              fontWeight: 'bold'
+            }}>
+              Press "Start" to begin
+            </div>
+          )}
+
+          {/* Process Indicator*/}
+          {isActive && (
+            <div style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              {showAnnotatedFrame ? 'Analyzing' : 'Waiting..'}
             </div>
           )}
         </>
-      )}
-      {!isActive && isCameraReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/70">
-          <p className="text-xl font-semibold text-gray-300">Press "Start" to begin</p>
-        </div>
       )}
     </div>
   );

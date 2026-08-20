@@ -14,8 +14,9 @@ function App() {
   const [techniqueScore, setTechniqueScore] = useState(0);
   const [status, setStatus] = useState('Esperando...');
   const [prediction, setPrediction] = useState(null);
-  const [confidence, setConfidence] = useState(0);
-  
+  const [confidence, setConfidence] = useState(0);  
+  const [annotatedFrame, setAnnotatedFrame] = useState(null);
+
   const wsUrl = `ws://localhost:8000/ws/${clientId}`;
   const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
 
@@ -24,8 +25,8 @@ function App() {
       const { type, data } = lastMessage;
       
       if (type === 'result' && data) {
-        if (data.repetition_count !== undefined) {
-          setReps(data.repetition_count);
+        if (data.frame) {
+          setAnnotatedFrame(data.frame);
         }
         
         if (data.prediction) {
@@ -55,14 +56,15 @@ function App() {
 
   const handleFrame = (frameData) => {
     if (isActive && isConnected) {
-      sendMessage({
-        type: 'frame',
-        data: frameData
-      });
+        sendMessage({
+            type: 'frame',
+            data: frameData
+        });
     }
   };
-
+  
   const handleStart = () => {
+    console.log("Starting training..");
     setIsActive(true);
     sendMessage({
       type: 'start_training',
@@ -71,10 +73,12 @@ function App() {
   };
 
   const handleStop = () => {
+    console.log("Stopping training...")
     setIsActive(false);
   };
 
   const handleReset = () => {
+    console.log("Restarting counter..")
     setReps(0);
     setCorrectReps(0);
     setTechniqueScore(0);
@@ -86,7 +90,7 @@ function App() {
     });
   };
 
-  return (
+ return (
     <div style={{
       minHeight: '100vh',
       backgroundColor: '#111827',
@@ -111,6 +115,14 @@ function App() {
           </p>
           <p style={{ color: '#4b5563', fontSize: '12px', marginTop: '4px' }}>ID: {clientId}</p>
         </header>
+
+        <div style={{ marginBottom: '24px'}}>
+            <Camera
+                onFrame={handleFrame}
+                iSActive={isActive}
+                annotatedFrame={annotatedFrame}
+            />
+        </div>
 
         {/* Connection status alert */}
         {!isConnected && (
