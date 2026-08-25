@@ -13,7 +13,6 @@ function App() {
   const [correctReps, setCorrectReps] = useState(0);
   const [techniqueScore, setTechniqueScore] = useState(0);
   const [status, setStatus] = useState('Waiting...');
-  const [exerciseStatus, setExerciseStatus] = useState('Resting');
   const [prediction, setPrediction] = useState(null);
   const [confidence, setConfidence] = useState(0);
   const [landmarks, setLandmarks] = useState(null);
@@ -60,12 +59,6 @@ function App() {
         if (pred.probabilities) {
           const probCorrect = pred.probabilities.correct || 0;
           setTechniqueScore(Math.round(probCorrect * 100));
-        }
-
-        if (data.has_landmarks) {
-          setExerciseStatus('Doing Exercise');
-        } else {
-          setExerciseStatus('Resting');
         }
       }
     }
@@ -177,8 +170,6 @@ function App() {
             correctReps={correctReps}
             techniqueScore={techniqueScore}
             status={status}
-            confidence={confidence}
-            exerciseStatus={exerciseStatus}
           />
         </div>
 
