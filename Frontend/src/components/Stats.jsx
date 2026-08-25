@@ -3,7 +3,8 @@ import React from 'react';
 const Stats = ({ reps, correctReps, techniqueScore, status }) => {
   const getStatusColor = () => {
     if (status === 'Correct') return '#22c55e';
-    if (status === 'Improvable') return '#f59e0b';
+    if (status === 'Improvable') return '#ef4444';
+    if (status === 'Ready' || status === 'Descending' || status === 'Bottom') return '#f59e0b';
     return '#9ca3af';
   };
 

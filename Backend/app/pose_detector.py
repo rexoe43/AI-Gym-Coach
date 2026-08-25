@@ -22,10 +22,10 @@ class PoseDetector:
             landmarks = []
             for landmark in results.pose_landmarks.landmark:
                 landmarks.append({
-                    'x': landmark.x,
-                    'y': landmark.y,
-                    'z': landmark.z,
-                    'visibility': landmark.visibility
+                    'x': float(landmark.x),
+                    'y': float(landmark.y),
+                    'z': float(landmark.z),
+                    'visibility': float(landmark.visibility)
                 })
 
         return landmarks

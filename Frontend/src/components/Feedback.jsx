@@ -30,7 +30,8 @@ const Feedback = ({ prediction, confidence, error }) => {
 
   const isCorrect = prediction === 'correct';
   const isNeutral = ['no_detection', 'no_model', 'unknown', 'no_landmarks', 'no_features'].includes(prediction);
-  const confidencePercent = (confidence * 100).toFixed(1);
+  const confidenceValue = confidence > 1 ? confidence : confidence * 100;
+  const confidencePercent = confidenceValue.toFixed(1);
   const borderColor = isCorrect ? '#22c55e' : isNeutral ? '#6b7280' : '#ef4444';
 
   return (

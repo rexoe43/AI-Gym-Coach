@@ -35,30 +35,26 @@ function App() {
       if (data.repetition_count !== undefined) {
         setReps(data.repetition_count);
       }
+      if (data.correct_rep_count !== undefined) {
+        setCorrectReps(data.correct_rep_count);
+      }
+      if (data.technique_score !== undefined) {
+        setTechniqueScore(data.technique_score);
+      }
+      if (data.status) {
+        setStatus(data.status);
+      }
 
       if (data.prediction) {
         const pred = data.prediction;
-        setPrediction(pred.class);
-        setConfidence(pred.confidence || 0);
-
-        if (pred.class === 'correct') {
-          setStatus('Correct');
-          if (data.repetition_completed) {
-            setCorrectReps((prev) => prev + 1);
-          }
-        } else if (pred.class === 'incomplete_range') {
-          setStatus('Improvable');
-        } else if (pred.class === 'no_detection') {
-          setStatus('No body detected');
-        } else if (pred.class === 'no_model') {
-          setStatus('Pose detected (no model)');
-        } else {
-          setStatus('Unknown');
+        const label = pred.label || pred.class;
+        setPrediction(label);
+        setConfidence(typeof pred.confidence === 'number' ? pred.confidence : 0);
+        if (!data.status && pred.status) {
+          setStatus(pred.status);
         }
-
-        if (pred.probabilities) {
-          const probCorrect = pred.probabilities.correct || 0;
-          setTechniqueScore(Math.round(probCorrect * 100));
+        if (data.technique_score === undefined && pred.technique_score !== undefined) {
+          setTechniqueScore(pred.technique_score);
         }
       }
     }
