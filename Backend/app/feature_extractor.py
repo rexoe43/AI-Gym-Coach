@@ -21,7 +21,71 @@ def calculate_angle(p1, p2, p3):
     cosine = np.clip(cosine, -1.0, 1.0)
     angle = np.arccos(cosine)
 
-    return np.degrees(angle)
+    return float(np.degrees(angle))
+
+
+def pose_confidence(landmarks):
+    if not landmarks or len(landmarks) < 29:
+        return 0.0
+    key_points = [11, 12, 23, 24, 25, 26, 27, 28]
+    visibilities = [float(landmarks[i].get('visibility', 0.0)) for i in key_points]
+    return float(sum(visibilities) / len(visibilities))
+
+
+def active_knee_angle(features, landmarks=None):
+    left = float(features.get('knee_angle_left', 180))
+    right = float(features.get('knee_angle_right', 180))
+    if landmarks and len(landmarks) > 26:
+        left_vis = float(landmarks[25].get('visibility', 0))
+        right_vis = float(landmarks[26].get('visibility', 0))
+        if left_vis > 0.5 and right_vis > 0.5:
+            return min(left, right)
+        return left if left_vis >= right_vis else right
+    return min(left, right)
+
+
+def score_squat_technique(features, landmarks=None):
+    knee = active_knee_angle(features, landmarks)
+    torso = float(features.get('torso_angle', 0))
+    confidence = pose_confidence(landmarks) if landmarks else 0.5
+
+    if knee >= 150:
+        depth_score = 60.0
+        status = 'Ready'
+    elif knee >= 110:
+        depth_score = 70.0 + (150 - knee) / 40 * 15
+        status = 'Descending'
+    else:
+        depth_score = max(0.0, 100.0 - abs(knee - 90) * 1.5)
+        status = 'Bottom'
+
+    torso_score = max(0.0, 100.0 - max(0.0, torso - 20) * 2.5)
+    technique_score = max(0, min(100, 0.65 * depth_score + 0.35 * torso_score))
+
+    good_torso = torso < 40
+    if status == 'Bottom':
+        label = 'correct' if knee <= 100 and good_torso else 'incomplete_range'
+        status = 'Correct' if label == 'correct' else 'Improvable'
+    elif status == 'Descending':
+        label = 'correct' if good_torso else 'incomplete_range'
+    else:
+        label = 'correct' if good_torso else 'incomplete_range'
+
+    return {
+        'class': label,
+        'label': label,
+        'confidence': round(confidence, 3),
+        'probabilities': {
+            'correct': round(technique_score / 100.0, 3),
+            'incomplete_range': round(1 - technique_score / 100.0, 3),
+        },
+        'technique_score': int(round(technique_score)),
+        'status': status,
+        'knee_angle': round(knee, 2),
+        'torso_angle': round(torso, 2),
+        'error': None,
+    }
+
 
 def extract_features_from_landmarks(landmarks):
 
@@ -79,8 +143,7 @@ def extract_features_from_landmarks(landmarks):
 
     dot = np.dot(torso_vector, vertical)
     dot = np.clip(dot, -1.0, 1.0)
-    features['torso_angle'] = np.degrees(np.arccos(dot))
-
-    features['torso_length'] = np.linalg.norm(shoulder_center - hip_center)
+    features['torso_angle'] = float(np.degrees(np.arccos(dot)))
+    features['torso_length'] = float(np.linalg.norm(shoulder_center - hip_center))
 
     return features

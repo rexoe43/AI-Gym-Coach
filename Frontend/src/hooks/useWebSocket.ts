@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback} from 'react';
 
 export const useWebSocket = (url) => {
     const [isConnected, setIsConnected] = useState(false);
-    const [messages, setMessages] = useState([]);
     const [lastMessage, setLastMessage] = useState(null)
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
@@ -23,7 +22,6 @@ export const useWebSocket = (url) => {
                 try {
                     const data = JSON.parse(event.data);
                     setLastMessage(data);
-                    setMessages(prev => [...prev, data]);
                 } catch (e) {
                     console.error('Error parsing message:', e);
                 }
@@ -74,7 +72,6 @@ export const useWebSocket = (url) => {
 
     return {
         isConnected,
-        messages,
         lastMessage,
         sendMessage,
         disconnect,
