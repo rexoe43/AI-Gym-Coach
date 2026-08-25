@@ -4,7 +4,7 @@ import base64
 import cv2
 import numpy as np
 
-from .feature_extractor import extract_features_from_landmarks, active_knee_angle
+from .feature_extractor import extract_features_from_landmarks
 from .pose_detector import pose_detector
 from .predictor import predict_exercise
 from .repetition_counter import repetition_counter
@@ -41,48 +41,55 @@ class WebSocketManager:
                 return {'error': 'No se pudo decodificar el frame'}
 
             landmarks = pose_detector.process_frame(frame)
-            prediction = predict_exercise(landmarks)
 
             results = {
                 'has_landmarks': bool(landmarks),
                 'landmarks': landmarks,
-                'prediction': prediction,
+                'prediction': None,
                 'repetition_count': repetition_counter.count,
-                'correct_rep_count': repetition_counter.correct_count,
-                'technique_score': prediction.get('technique_score', 0),
-                'status': prediction.get('status', 'Waiting...'),
                 'exercise': 'squat',
             }
 
             if not landmarks:
+                results['prediction'] = {
+                    'class': 'no_detection',
+                    'confidence': 0.0,
+                    'probabilities': {},
+                    'error': 'No se detecto el cuerpo',
+                }
                 return results
 
-            features = extract_features_from_landmarks(landmarks)
-            if features:
-                knee_angle = active_knee_angle(features, landmarks)
-                torso_angle = features.get('torso_angle', 0)
-                completed = repetition_counter.update(landmarks, knee_angle, torso_angle)
-                results['repetition_count'] = repetition_counter.count
-                results['correct_rep_count'] = repetition_counter.correct_count
-                if completed:
-                    results['repetition_completed'] = True
-                    if repetition_counter.count > 0:
-                        results['technique_score'] = repetition_counter.average_score
-                elif repetition_counter.count > 0:
-                    live = prediction.get('technique_score', 0)
-                    results['technique_score'] = int(round(
-                        0.6 * repetition_counter.average_score + 0.4 * live
-                    ))
+            try:
+                features = extract_features_from_landmarks(landmarks)
 
-            if client_id not in self.training_sessions:
-                self.training_sessions[client_id] = {
-                    'landmarks_history': [],
-                    'predictions_history': [],
+                if features and 'knee_angle_right' in features:
+                    completed = repetition_counter.update(
+                        landmarks, features['knee_angle_right']
+                    )
+                    if completed:
+                        results['repetition_completed'] = True
+                        results['repetition_count'] = repetition_counter.count
+
+                prediction = predict_exercise(landmarks)
+                results['prediction'] = prediction
+
+                if client_id not in self.training_sessions:
+                    self.training_sessions[client_id] = {
+                        'landmarks_history': [],
+                        'predictions_history': [],
+                    }
+
+                self.training_sessions[client_id]['landmarks_history'].append(landmarks)
+                self.training_sessions[client_id]['predictions_history'].append(prediction)
+
+            except Exception as e:
+                print(f'Error en landmarks: {e}')
+                results['prediction'] = {
+                    'class': 'processing_error',
+                    'confidence': 0.0,
+                    'probabilities': {},
+                    'error': str(e),
                 }
-            history = self.training_sessions[client_id]['predictions_history']
-            history.append(prediction)
-            if len(history) > 120:
-                del history[:-60]
 
             return results
 
