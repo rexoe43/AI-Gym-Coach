@@ -62,25 +62,27 @@ class WebSocketManager:
             try:
                 features = extract_features_from_landmarks(landmarks)
 
-                if features and 'knee_angle_right' in features:
-                    completed = repetition_counter.update(
-                        landmarks, features['knee_angle_right']
-                    )
-                    if completed:
-                        results['repetition_completed'] = True
-                        results['repetition_count'] = repetition_counter.count
-
                 prediction = predict_exercise(landmarks)
                 results['prediction'] = prediction
 
-                if client_id not in self.training_sessions:
-                    self.training_sessions[client_id] = {
-                        'landmarks_history': [],
-                        'predictions_history': [],
-                    }
+                if features and 'knee_angle_right' in features:
+                    rep_result = repetition_counter.update(
+                        landmarks, features['knee_angle_right'], prediction
+                    )
+                    results['repetition_count'] = repetition_counter.count
 
-                self.training_sessions[client_id]['landmarks_history'].append(landmarks)
-                self.training_sessions[client_id]['predictions_history'].append(prediction)
+                    if rep_result['completed']:
+                        results['repetition_completed'] = True
+                        results['repetition_is_correct'] = rep_result['is_correct']
+
+                # Use setdefault instead of overwriting: 'start_training' in
+                # main.py stores its own dict under the same client_id key,
+                # so we must not clobber it (and it must not clobber us).
+                session = self.training_sessions.setdefault(client_id, {})
+                session.setdefault('landmarks_history', [])
+                session.setdefault('predictions_history', [])
+                session['landmarks_history'].append(landmarks)
+                session['predictions_history'].append(prediction)
 
             except Exception as e:
                 print(f'Error en landmarks: {e}')

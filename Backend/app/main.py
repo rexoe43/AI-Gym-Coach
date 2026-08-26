@@ -34,11 +34,12 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 })
             elif message.get('type') == 'start_training':
                 exercise = message.get('exercise', 'squat')
-                websocket_manager.training_sessions[client_id] = {
+                session = websocket_manager.training_sessions.setdefault(client_id, {})
+                session.update({
                     'exercise': exercise,
                     'repetition_counter': 0,
                     'started': True
-                }
+                })
                 await websocket.send_json({
                     'type': 'training_started',
                     'exercise': exercise

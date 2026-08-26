@@ -10,11 +10,10 @@ function App() {
   const [isActive, setIsActive] = useState(false);
   const [exercise, setExercise] = useState('squat');
   const [reps, setReps] = useState(0);
-  const [correctReps, setCorrectReps] = useState(0);
-  const [techniqueScore, setTechniqueScore] = useState(0);
   const [status, setStatus] = useState('Waiting...');
-  const [prediction, setPrediction] = useState(null);
-  const [confidence, setConfidence] = useState(0);
+  // 'neutral' | 'correct' | 'improvable' — driven ONLY by whether a completed
+  // repetition was valid, not by noisy per-frame predictions.
+  const [techniqueStatus, setTechniqueStatus] = useState('neutral');
   const [landmarks, setLandmarks] = useState(null);
 
   const wsUrl = `ws://localhost:8000/ws/${clientId}`;
@@ -32,37 +31,28 @@ function App() {
         setLandmarks(null);
       }
 
+      // Repetitions already only counts VALID reps on the backend side.
       if (data.repetition_count !== undefined) {
         setReps(data.repetition_count);
       }
 
-      if (data.prediction) {
-        const pred = data.prediction;
-        setPrediction(pred.class);
-        setConfidence(pred.confidence || 0);
+      // Technique reflects the outcome of the last COMPLETED repetition,
+      // not the class of a single passing frame.
+      if (data.repetition_completed) {
+        setTechniqueStatus(data.repetition_is_correct ? 'correct' : 'improvable');
+      }
 
-        if (pred.class === 'correct') {
-          setStatus('Correct');
-          if (data.repetition_completed) {
-            setCorrectReps((prev) => prev + 1);
-          }
-        } else if (pred.class === 'incomplete_range') {
-          setStatus('Improvable');
-        } else if (pred.class === 'no_detection') {
-          setStatus('No body detected');
-        } else if (pred.class === 'no_model') {
-          setStatus('Pose detected (no model)');
-        } else {
-          setStatus('Unknown');
-        }
-
-        if (pred.probabilities) {
-          const probCorrect = pred.probabilities.correct || 0;
-          setTechniqueScore(Math.round(probCorrect * 100));
-        }
+      // Status is about detection/session state, separate from technique.
+      const pred = data.prediction;
+      if (pred && pred.class === 'no_detection') {
+        setStatus('No body detected');
+      } else if (isActive) {
+        setStatus('Training');
+      } else {
+        setStatus('Waiting...');
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, isActive]);
 
   const handleFrame = useCallback((frameData) => {
     if (isActive && isConnected) {
@@ -76,6 +66,7 @@ function App() {
   const handleStart = () => {
     setIsActive(true);
     setLandmarks(null);
+    setStatus('Training');
     sendMessage({
       type: 'start_training',
       exercise: exercise
@@ -85,15 +76,13 @@ function App() {
   const handleStop = () => {
     setIsActive(false);
     setLandmarks(null);
+    setStatus('Waiting...');
   };
 
   const handleReset = () => {
     setReps(0);
-    setCorrectReps(0);
-    setTechniqueScore(0);
     setStatus('Waiting...');
-    setPrediction(null);
-    setConfidence(0);
+    setTechniqueStatus('neutral');
     setLandmarks(null);
 
     if (isActive) {
@@ -167,16 +156,13 @@ function App() {
         <div style={{ marginBottom: '24px' }}>
           <Stats
             reps={reps}
-            correctReps={correctReps}
-            techniqueScore={techniqueScore}
             status={status}
           />
         </div>
 
         <div style={{ marginBottom: '24px' }}>
           <Feedback
-            prediction={prediction}
-            confidence={confidence}
+            techniqueStatus={techniqueStatus}
             error={!isConnected ? 'Didnt connect to the server' : null}
           />
         </div>

@@ -1,9 +1,9 @@
 import React from 'react';
 
-const Stats = ({ reps, correctReps, techniqueScore, status }) => {
+const Stats = ({ reps, status }) => {
   const getStatusColor = () => {
-    if (status === 'Correct') return '#22c55e';
-    if (status === 'Improvable') return '#f59e0b';
+    if (status === 'Training') return '#22c55e';
+    if (status === 'No body detected') return '#ef4444';
     return '#9ca3af';
   };
 
@@ -23,30 +23,6 @@ const Stats = ({ reps, correctReps, techniqueScore, status }) => {
         <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Repetitions</p>
         <p style={{ color: '#6366f1', fontSize: '32px', fontWeight: 'bold', margin: '4px 0 0 0' }}>
           {reps}
-        </p>
-      </div>
-
-      <div style={{
-        backgroundColor: '#1f2937',
-        borderRadius: '12px',
-        padding: '16px',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Corrects</p>
-        <p style={{ color: '#22c55e', fontSize: '32px', fontWeight: 'bold', margin: '4px 0 0 0' }}>
-          {correctReps}
-        </p>
-      </div>
-
-      <div style={{
-        backgroundColor: '#1f2937',
-        borderRadius: '12px',
-        padding: '16px',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Puntation</p>
-        <p style={{ color: '#f59e0b', fontSize: '32px', fontWeight: 'bold', margin: '4px 0 0 0' }}>
-          {techniqueScore}%
         </p>
       </div>
 
