@@ -1,20 +1,6 @@
 import React from 'react';
 
-const Feedback = ({ prediction, confidence, error }) => {
-  if (!prediction && !error) {
-    return (
-      <div style={{
-        backgroundColor: '#1f2937',
-        borderRadius: '12px',
-        padding: '24px',
-        textAlign: 'center',
-        color: '#9ca3af'
-      }}>
-        <p style={{ margin: 0 }}>Do exercise to get a feedback</p>
-      </div>
-    );
-  }
-
+const Feedback = ({ techniqueStatus, error }) => {
   if (error) {
     return (
       <div style={{
@@ -28,73 +14,60 @@ const Feedback = ({ prediction, confidence, error }) => {
     );
   }
 
-  const isCorrect = prediction === 'correct';
-  const isNeutral = ['no_detection', 'no_model', 'unknown', 'no_landmarks', 'no_features'].includes(prediction);
-  const confidenceValue = confidence > 1 ? confidence : confidence * 100;
-  const confidencePercent = confidenceValue.toFixed(1);
-  const borderColor = isCorrect ? '#22c55e' : isNeutral ? '#6b7280' : '#ef4444';
+  // 'neutral' (gray, default / no rep judged yet), 'correct' (green),
+  // 'improvable' (red) — set only when a repetition actually completes.
+  const config = {
+    neutral: { label: '-', color: '#9ca3af', border: '#374151', tip: null },
+    correct: {
+      label: 'Correct',
+      color: '#22c55e',
+      border: '#22c55e',
+      tip: { text: 'Excelent, keep going.', bg: 'rgba(34, 197, 94, 0.1)', fg: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' },
+    },
+    improvable: {
+      label: 'Improvable',
+      color: '#ef4444',
+      border: '#ef4444',
+      tip: {
+        text: 'Tip: Adjust your posture. Try to keep your back straight and lower yourself until your thighs are parallel to the floor.',
+        bg: 'rgba(239, 68, 68, 0.1)',
+        fg: '#ef4444',
+        borderColor: 'rgba(239, 68, 68, 0.2)',
+      },
+    },
+  };
+
+  const current = config[techniqueStatus] || config.neutral;
 
   return (
     <div style={{
       backgroundColor: '#1f2937',
       borderRadius: '12px',
       padding: '24px',
-      border: `2px solid ${borderColor}`
+      border: `2px solid ${current.border}`
     }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap'
-      }}>
-        <div>
-          <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Technique</p>
-          <p style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: isCorrect ? '#22c55e' : isNeutral ? '#9ca3af' : '#ef4444',
-            margin: '4px 0 0 0'
-          }}>
-            {isCorrect ? 'Correct' : isNeutral ? 'No score yet' : 'Improvable'}
-          </p>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Confidence</p>
-          <p style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#6366f1',
-            margin: '4px 0 0 0'
-          }}>
-            {confidencePercent}%
-          </p>
-        </div>
+      <div>
+        <p style={{ color: '#9ca3af', fontSize: '14px', margin: 0 }}>Technique</p>
+        <p style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
+          color: current.color,
+          margin: '4px 0 0 0'
+        }}>
+          {current.label}
+        </p>
       </div>
-      
-      {!isCorrect && !isNeutral && (
+
+      {current.tip && (
         <div style={{
           marginTop: '16px',
           padding: '12px',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
+          backgroundColor: current.tip.bg,
           borderRadius: '8px',
-          border: '1px solid rgba(239, 68, 68, 0.2)'
+          border: `1px solid ${current.tip.borderColor}`
         }}>
-          <p style={{ color: '#ef4444', fontSize: '14px', margin: 0 }}>
-            Tip: Adjust your posture. Try to keep your back straight and lower yourself until your thighs are parallel to the floor.
-          </p>
-        </div>
-      )}
-      
-      {isCorrect && (
-        <div style={{
-          marginTop: '16px',
-          padding: '12px',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          borderRadius: '8px',
-          border: '1px solid rgba(34, 197, 94, 0.2)'
-        }}>
-          <p style={{ color: '#22c55e', fontSize: '14px', margin: 0 }}>
-            Excelent, keep going.
+          <p style={{ color: current.tip.fg, fontSize: '14px', margin: 0 }}>
+            {current.tip.text}
           </p>
         </div>
       )}

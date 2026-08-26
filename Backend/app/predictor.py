@@ -1,6 +1,6 @@
 # backend/app/predictor.py
 from .model_loader import model_loader
-from .feature_extractor import extract_features_from_landmarks
+from .feature_extractor import extract_features_from_landmarks, score_squat_technique
 
 def predict_exercise(landmarks, exercise_type='squat'):
     default_result = {
@@ -23,10 +23,11 @@ def predict_exercise(landmarks, exercise_type='squat'):
             default_result['error'] = 'Error extracting caracteristics'
             return default_result
         
-        if model_loader is None:
-            default_result['class'] = 'no_model'
-            default_result['error'] = 'Model no available'
-            return default_result
+        # Fallback: if the trained model isn't loaded (no best_model.pkl found),
+        # use the geometric heuristic in feature_extractor.py instead of
+        # returning a flat 'no_model' / 0.0 confidence every time.
+        if model_loader is None or not model_loader.is_loaded:
+            return score_squat_technique(features, landmarks)
         
         result = model_loader.predict(features)
         
