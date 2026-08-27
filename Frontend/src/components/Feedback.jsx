@@ -14,8 +14,7 @@ const Feedback = ({ techniqueStatus, error }) => {
     );
   }
 
-  // 'neutral' (gray, default / no rep judged yet), 'correct' (green),
-  // 'improvable' (red) — set only when a repetition actually completes.
+  //  set only when a repetition actually completes.
   const config = {
     neutral: { label: '-', color: '#9ca3af', border: '#374151', tip: null },
     correct: {
