@@ -37,11 +37,7 @@ def _fallback_repetition_score(raw_series, exercise_type):
 
 
 def predict_repetition(raw_series, exercise_type='squat'):
-    """
-    Classifies ONE COMPLETE repetition using the aggregated 90-feature
-    vector the exercise-specific model was trained on. Picks the right
-    model (squat vs pushup) via model_loader.get(exercise_type).
-    """
+    # Classifies one complete repetition 
     default_result = {
         'class': 'unknown',
         'confidence': 0.0,
@@ -52,7 +48,7 @@ def predict_repetition(raw_series, exercise_type='squat'):
     primary_joint = 'elbow_angle_right' if exercise_type == 'pushup' else 'knee_angle_right'
 
     if not raw_series or len(raw_series.get(primary_joint, [])) < MIN_FRAMES_FOR_PREDICTION:
-        default_result['error'] = 'Repeticion demasiado corta para clasificar'
+        default_result['error'] = 'Repetition too short for training'
         return default_result
 
     try:

@@ -5,9 +5,7 @@ import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# One filename per exercise. 'squat' keeps the original best_model.pkl name
-# for backward compatibility; each new exercise gets its own file so
-# training one never overwrites another.
+
 MODEL_FILENAMES = {
     'squat': 'best_model.pkl',
     'pushup': 'best_model_pushup.pkl',
@@ -15,7 +13,7 @@ MODEL_FILENAMES = {
 
 
 class SingleModel:
-    """Holds one trained model (squat OR pushup) + its scaler/feature names."""
+    # Holds one trained model with the scaler/feature names
 
     def __init__(self, exercise, filename):
         self.exercise = exercise
@@ -50,13 +48,13 @@ class SingleModel:
                     break
 
             if found is None:
-                print(f"[{self.exercise}] Modelo no encontrado ({self.filename}) - "
-                      f"predicciones desactivadas hasta que exista ese archivo")
+                print(f"[{self.exercise}] Model not found  ({self.filename}) - "
+                      f"Predictions deactivated")
                 self.is_loaded = False
                 return
 
             self.model_path = found
-            print(f'[{self.exercise}] Cargando modelo desde: {found}')
+            print(f'[{self.exercise}] Loading model from: {found}')
 
             with open(found, 'rb') as f:
                 data = pickle.load(f)
@@ -68,7 +66,7 @@ class SingleModel:
                 self.classes = [str(c) for c in self.model.classes_]
             self.is_loaded = True
 
-            print(f'[{self.exercise}] Modelo cargado correctamente')
+            print(f'[{self.exercise}] Model loaded correctly')
             print(f'   Clases: {self.classes}')
             print(f'   Caracteristicas: {len(self.feature_names)}')
 
@@ -78,7 +76,7 @@ class SingleModel:
 
     def predict(self, features):
         if not self.is_loaded or self.model is None:
-            return self._unavailable_result('Modelo no disponible')
+            return self._unavailable_result('Model not available')
 
         try:
             if isinstance(features, dict):
@@ -121,11 +119,7 @@ class SingleModel:
 
 
 class MultiExerciseModelLoader:
-    """
-    Loads one SingleModel per known exercise at startup. Kept under the
-    same name/interface (`model_loader`) so existing imports still work —
-    just call model_loader.get(exercise) to fetch the right one.
-    """
+    # Load only one model per exercise
 
     def __init__(self):
         self.models = {
@@ -140,8 +134,7 @@ class MultiExerciseModelLoader:
         model = self.models.get(exercise)
         return bool(model and model.is_loaded)
 
-    # Backward-compat shims so old code checking model_loader.model /
-    # model_loader.is_loaded (singular, squat-only) doesn't break.
+    
     @property
     def model(self):
         squat = self.models.get('squat')

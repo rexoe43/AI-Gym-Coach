@@ -1,8 +1,7 @@
 import numpy as np
 
 def calculate_angle(p1, p2, p3):
-    """Calculate the angle between three points"""
-
+# Calculate the angle between three points
     a = np.array([p1['x'], p1['y']])
     b = np.array([p2['x'], p2['y']])
     c = np.array([p3['x'], p3['y']])
@@ -149,16 +148,7 @@ def extract_features_from_landmarks(landmarks):
     return features
 
 
-# ---------------------------------------------------------------------------
-# Repetition-level feature vector (matches training_model.py exactly)
-# ---------------------------------------------------------------------------
-# The trained model expects 90 features: 18 raw per-frame signals, each
-# aggregated with mean/std/min/max/range across an ENTIRE repetition.
-#   - 9 "position" signals (angles + torso_length)
-#   - 8 "velocity" signals (frame-to-frame delta of the position signals,
-#     EXCLUDING torso_length)
-#   - 1 "acceleration" signal (delta of velocity, ONLY knee_angle_right)
-# This must stay in sync with training_model.py's prepare_features().
+# Feature vector
 
 POSITION_KEYS = [
     'knee_angle_right', 'knee_angle_left',
@@ -185,11 +175,7 @@ RAW_SERIES_KEYS = list(dict.fromkeys(POSITION_KEYS + ['torso_angle']))
 
 
 def extract_raw_angles(landmarks):
-    """
-    Per-frame raw signals needed to build a repetition's feature vector later,
-    plus 'torso_angle' (not used by the ML model, kept only for the
-    heuristic fallback in score_squat_technique).
-    """
+    # It was created because the backend needed to track the number of repetitions
     features = extract_features_from_landmarks(landmarks)
     if features is None:
         return None
@@ -208,17 +194,7 @@ def _stats(vec, name, values):
 
 
 def build_repetition_feature_vector(raw_series, exercise_type='squat'):
-    """
-    raw_series: dict like {'knee_angle_right': [v0, v1, v2, ...], ...}
-    collected across ALL frames of one repetition (from start of the
-    descent/bend to the top of the ascent/extension).
-
-    Returns a flat dict with the 90 keys the corresponding trained model
-    expects. Position (9) and velocity (8) groups are identical across
-    exercises; only the acceleration group's joint changes per exercise
-    (knee for squat, elbow for pushup) since that's the "depth" signal
-    that matters most for each movement.
-    """
+    # Return the array data
     vec = {}
 
     for key in POSITION_KEYS:
