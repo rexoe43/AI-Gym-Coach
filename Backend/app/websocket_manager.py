@@ -62,17 +62,19 @@ class WebSocketManager:
             try:
                 raw_angles = extract_raw_angles(landmarks)
 
-                if raw_angles and 'knee_angle_right' in raw_angles:
-                    rep_result = repetition_counter.update(
-                        landmarks, raw_angles['knee_angle_right'], raw_angles
-                    )
+                if raw_angles:
+                    session = self.training_sessions.get(client_id, {})
+                    exercise_type = session.get('exercise', repetition_counter.exercise_type)
+
+                    rep_result = repetition_counter.update(landmarks, raw_angles)
                     results['repetition_count'] = repetition_counter.count
+                    results['exercise'] = exercise_type
 
                     if rep_result['completed']:
                         # Classify the WHOLE repetition now, using the 90
-                        # aggregated features the model was trained on —
-                        # not a single frame.
-                        classification = predict_repetition(rep_result['raw_series'])
+                        # aggregated features the exercise's model was
+                        # trained on — not a single frame.
+                        classification = predict_repetition(rep_result['raw_series'], exercise_type)
                         results['repetition_completed'] = True
                         results['repetition_is_correct'] = (
                             classification.get('class') == 'correct'

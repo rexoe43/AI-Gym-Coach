@@ -5,19 +5,24 @@ from .feature_extractor import build_repetition_feature_vector
 MIN_FRAMES_FOR_PREDICTION = 3
 
 
-def _fallback_repetition_score(raw_series):
+def _fallback_repetition_score(raw_series, exercise_type):
     """
-    Used only if best_model.pkl isn't loaded. Simple geometric heuristic
-    over the whole repetition instead of a flat 0.0 confidence.
+    Used only if the exercise's model isn't loaded. Simple geometric
+    heuristic over the whole repetition instead of a flat 0.0 confidence.
     """
-    knee_values = raw_series.get('knee_angle_right', [])
+    if exercise_type == 'pushup':
+        depth_values = raw_series.get('elbow_angle_right', [])
+        depth_min = min(depth_values) if depth_values else 180.0
+        good_depth = depth_min <= 100  # elbow bent enough at the bottom
+    else:  # squat (default)
+        depth_values = raw_series.get('knee_angle_right', [])
+        depth_min = min(depth_values) if depth_values else 180.0
+        good_depth = depth_min <= 100
+
     torso_values = raw_series.get('torso_angle', [])
-
-    knee_min = min(knee_values) if knee_values else 180.0
     torso_mean = (sum(torso_values) / len(torso_values)) if torso_values else 0.0
-
-    good_depth = knee_min <= 100
     good_torso = torso_mean < 40
+
     is_correct = good_depth and good_torso
 
     return {
@@ -34,10 +39,8 @@ def _fallback_repetition_score(raw_series):
 def predict_repetition(raw_series, exercise_type='squat'):
     """
     Classifies ONE COMPLETE repetition using the aggregated 90-feature
-    vector the model was actually trained on (see training_model.py).
-    This replaces the old per-frame predict_exercise() for correctness
-    judgments — a single frame never carried enough information for this
-    model to work with.
+    vector the exercise-specific model was trained on. Picks the right
+    model (squat vs pushup) via model_loader.get(exercise_type).
     """
     default_result = {
         'class': 'unknown',
@@ -46,16 +49,20 @@ def predict_repetition(raw_series, exercise_type='squat'):
         'error': None,
     }
 
-    if not raw_series or len(raw_series.get('knee_angle_right', [])) < MIN_FRAMES_FOR_PREDICTION:
+    primary_joint = 'elbow_angle_right' if exercise_type == 'pushup' else 'knee_angle_right'
+
+    if not raw_series or len(raw_series.get(primary_joint, [])) < MIN_FRAMES_FOR_PREDICTION:
         default_result['error'] = 'Repeticion demasiado corta para clasificar'
         return default_result
 
     try:
-        if model_loader is None or not model_loader.is_loaded:
-            return _fallback_repetition_score(raw_series)
+        model = model_loader.get(exercise_type)
 
-        feature_vector = build_repetition_feature_vector(raw_series)
-        result = model_loader.predict(feature_vector)
+        if model is None or not model.is_loaded:
+            return _fallback_repetition_score(raw_series, exercise_type)
+
+        feature_vector = build_repetition_feature_vector(raw_series, exercise_type)
+        result = model.predict(feature_vector)
 
         if not isinstance(result, dict):
             default_result['error'] = f'Inespered Result: {type(result)}'
@@ -69,12 +76,12 @@ def predict_repetition(raw_series, exercise_type='squat'):
             result['probabilities'] = {'correct': 0.0, 'incomplete_range': 0.0}
 
         # TEMP DEBUG: confirm the real per-repetition classification.
-        print(f"[MODEL] repetition result -> {result}")
+        print(f"[MODEL:{exercise_type}] repetition result -> {result}")
 
         return result
 
     except Exception as e:
-        print(f" Error in predict_repetition: {e}")
+        print(f" Error in predict_repetition ({exercise_type}): {e}")
         default_result['class'] = 'error'
         default_result['error'] = str(e)
         return default_result

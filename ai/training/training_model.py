@@ -1,4 +1,5 @@
 # ai/training/train_model.py
+import argparse
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -8,47 +9,53 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 import pickle
 import os
 import json
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+# Un archivo de modelo por ejercicio, para no pisar el de squat al
+# entrenar pushup (o viceversa).
+MODEL_FILENAMES = {
+    'squat': 'best_model.pkl',
+    'pushup': 'best_model_pushup.pkl',
+}
+
 
 class ModelTrainer:
-    def __init__(self):
+    def __init__(self, exercise='squat'):
+        self.exercise = exercise
         self.model = None
         self.scaler = None
         self.feature_names = None
         self.metrics = {}
-        print(" Model Trainer initialized")
-    
-    def load_dataset(self, csv_path='dataset/datasets/exercise_dataset.csv'):
-        """
-        Loading dataset from the file .csv
-        """
+        print(f" Model Trainer initialized (exercise={exercise})")
+
+    def load_dataset(self, csv_path):
         print(f"\n Loading dataset: {csv_path}")
         df = pd.read_csv(csv_path)
+
+        if 'exercise' in df.columns:
+            before = len(df)
+            df = df[df['exercise'] == self.exercise].reset_index(drop=True)
+            print(f"   Filtrado por exercise='{self.exercise}': {before} -> {len(df)} filas")
+
         print(f"   Rows: {len(df)}")
         print(f"   Columns: {len(df.columns)}")
         print(f"   Class: {df['label'].unique()}")
         print(f"   Distribution:\n{df['label'].value_counts()}")
         return df
-    
+
     def prepare_features(self, df):
-        """
-        Prepare the caracteristics for the training
-        """
         exclude_cols = ['sample_id', 'exercise', 'label', 'frame_sequence', 'total_frames']
         feature_cols = [col for col in df.columns if col not in exclude_cols]
-        
-        print(f"\n Caracteristics found: {len(feature_cols)}")
-        
-        print("\n Adding caracteristics for reps...")
-        
+
+        print(f"\n Caracteristicas found: {len(feature_cols)}")
+        print("\n Adding caracteristicas for reps...")
+
         agg_features = []
         labels = []
-        
+
         for sample_id in df['sample_id'].unique():
             sample_data = df[df['sample_id'] == sample_id]
             label = sample_data['label'].iloc[0]
-            
+
             features = {}
             for col in feature_cols:
                 values = sample_data[col].values
@@ -57,35 +64,32 @@ class ModelTrainer:
                 features[f'{col}_min'] = np.min(values)
                 features[f'{col}_max'] = np.max(values)
                 features[f'{col}_range'] = np.max(values) - np.min(values)
-            
+
             agg_features.append(features)
             labels.append(label)
-        
+
         X = pd.DataFrame(agg_features)
         y = np.array(labels)
-        
+
         print(f"   Repetitions procesed: {len(X)}")
-        print(f"  Caractersitics generate: {len(X.columns)}")
-        
+        print(f"  Caracteristicas generate: {len(X.columns)}")
+
         return X, y, list(X.columns)
-    
+
     def train_model(self, X, y, feature_names):
-        """
-        Training the model
-        """
         print("\n Training model...")
-        
+
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y
         )
-        
+
         print(f"   Entrenamiento: {len(X_train)} muestras")
         print(f"   Prueba: {len(X_test)} muestras")
-        
+
         self.scaler = StandardScaler()
         X_train_scaled = self.scaler.fit_transform(X_train)
         X_test_scaled = self.scaler.transform(X_test)
-        
+
         self.model = RandomForestClassifier(
             n_estimators=100,
             max_depth=10,
@@ -93,93 +97,98 @@ class ModelTrainer:
             n_jobs=-1
         )
         self.model.fit(X_train_scaled, y_train)
-        
+
         y_pred = self.model.predict(X_test_scaled)
-        
+
         self.metrics = {
             'accuracy': accuracy_score(y_test, y_pred),
             'classification_report': classification_report(y_test, y_pred, output_dict=True),
             'confusion_matrix': confusion_matrix(y_test, y_pred).tolist()
         }
-        
+
         print(f"\nAccuracy: {self.metrics['accuracy']:.4f}")
         print("\nClassification Report:")
         print(classification_report(y_test, y_pred))
-        
+
         self.feature_names = feature_names
-        
+
         return X_train, X_test, y_train, y_test, y_pred
-    
+
     def analyze_feature_importance(self):
-        """
-        Analyze the important caracteristics
-        """
         if self.model is None:
             print("Model no trained")
             return
-        
+
         importances = self.model.feature_importances_
         feature_importance = pd.DataFrame({
             'feature': self.feature_names,
             'importance': importances
         }).sort_values('importance', ascending=False)
-        
-        print("\n Top 10 caracteristics more importants:")
+
+        print("\n Top 10 caracteristicas more importants:")
         print(feature_importance.head(10))
-        
+
         return feature_importance
-    
-    def save_model(self, model_path='models/saved/best_model.pkl'):
-        """
-        Save the training model
-        """
-        os.makedirs(os.path.dirname(model_path), exist_ok=True)
-        
+
+    def save_model(self, model_dir='models/saved'):
+        filename = MODEL_FILENAMES.get(self.exercise, f'best_model_{self.exercise}.pkl')
+        model_path = os.path.join(model_dir, filename)
+        os.makedirs(model_dir, exist_ok=True)
+
         model_data = {
             'model': self.model,
             'scaler': self.scaler,
             'feature_names': self.feature_names,
             'metrics': self.metrics
         }
-        
+
         with open(model_path, 'wb') as f:
             pickle.dump(model_data, f)
-        
+
         print(f"\n Model saved: {model_path}")
-        
+
         metrics_path = model_path.replace('.pkl', '_metrics.json')
         with open(metrics_path, 'w') as f:
             json.dump(self.metrics, f, indent=2)
         print(f"Metrics saved: {metrics_path}")
-        
+
         return model_path
 
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--exercise', default='squat', choices=['squat', 'pushup'])
+    parser.add_argument('--csv', default=None, help='Ruta al CSV. Por defecto: dataset/datasets/<exercise>_dataset.csv')
+    args = parser.parse_args()
+
+    csv_path = args.csv or f'dataset/datasets/{args.exercise}_dataset.csv'
+
     print("=" * 60)
-    print("Training of the Model")
+    print(f"Training of the Model ({args.exercise})")
     print("=" * 60)
-    
-    trainer = ModelTrainer()
-    
-    df = trainer.load_dataset()
-    
+
+    trainer = ModelTrainer(exercise=args.exercise)
+
+    df = trainer.load_dataset(csv_path)
+
     X, y, feature_names = trainer.prepare_features(df)
-    
+
     X_train, X_test, y_train, y_test, y_pred = trainer.train_model(X, y, feature_names)
-    
+
     feature_importance = trainer.analyze_feature_importance()
-    
+
     trainer.save_model()
-    
+
     print("\n" + "=" * 60)
     print(" Training Complete")
     print("=" * 60)
     print("\n Model Summary:")
+    print(f"   - Exercise: {args.exercise}")
     print(f"   - Accuracy: {trainer.metrics['accuracy']:.4f}")
-    print(f"   - Caracteristics: {len(feature_names)}")
+    print(f"   - Caracteristicas: {len(feature_names)}")
     print(f"   - Samples of training: {len(X_train)}")
     print(f"   - Samples of testing: {len(X_test)}")
-    
+
 
 if __name__ == "__main__":
     main()

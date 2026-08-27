@@ -175,7 +175,10 @@ VELOCITY_KEYS = [
     'shoulder_angle_right', 'shoulder_angle_left',
 ]
 
-ACCELERATION_KEYS = ['knee_angle_right']
+ACCELERATION_KEYS_BY_EXERCISE = {
+    'squat': ['knee_angle_right'],
+    'pushup': ['elbow_angle_right'],
+}
 
 # All raw per-frame keys a caller needs to track across a repetition.
 RAW_SERIES_KEYS = list(dict.fromkeys(POSITION_KEYS + ['torso_angle']))
@@ -204,16 +207,17 @@ def _stats(vec, name, values):
     vec[f'{name}_range'] = float(np.max(arr) - np.min(arr))
 
 
-def build_repetition_feature_vector(raw_series):
+def build_repetition_feature_vector(raw_series, exercise_type='squat'):
     """
     raw_series: dict like {'knee_angle_right': [v0, v1, v2, ...], ...}
     collected across ALL frames of one repetition (from start of the
-    descent to the top of the ascent).
+    descent/bend to the top of the ascent/extension).
 
-    Returns a flat dict with the 90 keys the trained model expects
-    (e.g. 'knee_angle_right_mean', 'knee_angle_right_velocity_std', ...).
-    Keys are matched by NAME in model_loader.predict(), so the exact
-    build order here doesn't matter — only that every name is present.
+    Returns a flat dict with the 90 keys the corresponding trained model
+    expects. Position (9) and velocity (8) groups are identical across
+    exercises; only the acceleration group's joint changes per exercise
+    (knee for squat, elbow for pushup) since that's the "depth" signal
+    that matters most for each movement.
     """
     vec = {}
 
@@ -225,7 +229,8 @@ def build_repetition_feature_vector(raw_series):
         velocity = np.diff(values) if len(values) > 1 else np.array([0.0])
         _stats(vec, f'{key}_velocity', velocity)
 
-    for key in ACCELERATION_KEYS:
+    acceleration_keys = ACCELERATION_KEYS_BY_EXERCISE.get(exercise_type, ['knee_angle_right'])
+    for key in acceleration_keys:
         values = raw_series.get(key, [])
         velocity = np.diff(values) if len(values) > 1 else np.array([0.0])
         acceleration = np.diff(velocity) if len(velocity) > 1 else np.array([0.0])

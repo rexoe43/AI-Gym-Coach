@@ -5,23 +5,33 @@ import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+# One filename per exercise. 'squat' keeps the original best_model.pkl name
+# for backward compatibility; each new exercise gets its own file so
+# training one never overwrites another.
+MODEL_FILENAMES = {
+    'squat': 'best_model.pkl',
+    'pushup': 'best_model_pushup.pkl',
+}
 
-class ModelLoader:
-    def __init__(self, model_path=None):
-        self.model_path = Path(model_path) if model_path else None
+
+class SingleModel:
+    """Holds one trained model (squat OR pushup) + its scaler/feature names."""
+
+    def __init__(self, exercise, filename):
+        self.exercise = exercise
+        self.filename = filename
         self.model = None
         self.scaler = None
         self.feature_names = []
         self.classes = ['correct', 'incomplete_range']
         self.is_loaded = False
+        self.model_path = None
         self.load_model()
 
     def _candidate_paths(self):
-        if self.model_path:
-            yield Path(self.model_path)
-        yield REPO_ROOT / 'ai' / 'models' / 'saved' / 'best_model.pkl'
-        yield REPO_ROOT / 'Backend' / 'models' / 'saved' / 'best_model.pkl'
-        yield REPO_ROOT / 'models' / 'saved' / 'best_model.pkl'
+        yield REPO_ROOT / 'ai' / 'models' / 'saved' / self.filename
+        yield REPO_ROOT / 'Backend' / 'models' / 'saved' / self.filename
+        yield REPO_ROOT / 'models' / 'saved' / self.filename
 
     def _unavailable_result(self, error):
         return {
@@ -40,12 +50,13 @@ class ModelLoader:
                     break
 
             if found is None:
-                print('Modelo no encontrado - predicciones desactivadas hasta que exista best_model.pkl')
+                print(f"[{self.exercise}] Modelo no encontrado ({self.filename}) - "
+                      f"predicciones desactivadas hasta que exista ese archivo")
                 self.is_loaded = False
                 return
 
             self.model_path = found
-            print(f'Cargando modelo desde: {found}')
+            print(f'[{self.exercise}] Cargando modelo desde: {found}')
 
             with open(found, 'rb') as f:
                 data = pickle.load(f)
@@ -57,12 +68,12 @@ class ModelLoader:
                 self.classes = [str(c) for c in self.model.classes_]
             self.is_loaded = True
 
-            print('Modelo cargado correctamente')
+            print(f'[{self.exercise}] Modelo cargado correctamente')
             print(f'   Clases: {self.classes}')
             print(f'   Caracteristicas: {len(self.feature_names)}')
 
         except Exception as e:
-            print(f'Error cargando modelo: {e}')
+            print(f'[{self.exercise}] Error cargando modelo: {e}')
             self.is_loaded = False
 
     def predict(self, features):
@@ -105,8 +116,36 @@ class ModelLoader:
             }
 
         except Exception as e:
-            print(f'Error en predict: {e}')
+            print(f'[{self.exercise}] Error en predict: {e}')
             return self._unavailable_result(str(e))
 
 
-model_loader = ModelLoader()
+class MultiExerciseModelLoader:
+    """
+    Loads one SingleModel per known exercise at startup. Kept under the
+    same name/interface (`model_loader`) so existing imports still work —
+    just call model_loader.get(exercise) to fetch the right one.
+    """
+
+    def __init__(self):
+        self.models = {
+            exercise: SingleModel(exercise, filename)
+            for exercise, filename in MODEL_FILENAMES.items()
+        }
+
+    def get(self, exercise):
+        return self.models.get(exercise)
+
+    def is_loaded(self, exercise):
+        model = self.models.get(exercise)
+        return bool(model and model.is_loaded)
+
+    # Backward-compat shims so old code checking model_loader.model /
+    # model_loader.is_loaded (singular, squat-only) doesn't break.
+    @property
+    def model(self):
+        squat = self.models.get('squat')
+        return squat.model if squat else None
+
+
+model_loader = MultiExerciseModelLoader()
