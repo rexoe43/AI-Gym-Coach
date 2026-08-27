@@ -4,9 +4,9 @@ import base64
 import cv2
 import numpy as np
 
-from .feature_extractor import extract_features_from_landmarks
+from .feature_extractor import extract_raw_angles
 from .pose_detector import pose_detector
-from .predictor import predict_exercise
+from .predictor import predict_repetition
 from .repetition_counter import repetition_counter
 
 
@@ -60,29 +60,26 @@ class WebSocketManager:
                 return results
 
             try:
-                features = extract_features_from_landmarks(landmarks)
+                raw_angles = extract_raw_angles(landmarks)
 
-                prediction = predict_exercise(landmarks)
-                results['prediction'] = prediction
+                if raw_angles:
+                    session = self.training_sessions.get(client_id, {})
+                    exercise_type = session.get('exercise', repetition_counter.exercise_type)
 
-                if features and 'knee_angle_right' in features:
-                    rep_result = repetition_counter.update(
-                        landmarks, features['knee_angle_right'], prediction
-                    )
+                    rep_result = repetition_counter.update(landmarks, raw_angles)
                     results['repetition_count'] = repetition_counter.count
+                    results['exercise'] = exercise_type
 
                     if rep_result['completed']:
+                        # Classify the WHOLE repetition now, using the 90
+                        # aggregated features the exercise's model was
+                        # trained on — not a single frame.
+                        classification = predict_repetition(rep_result['raw_series'], exercise_type)
                         results['repetition_completed'] = True
-                        results['repetition_is_correct'] = rep_result['is_correct']
-
-                # Use setdefault instead of overwriting: 'start_training' in
-                # main.py stores its own dict under the same client_id key,
-                # so we must not clobber it (and it must not clobber us).
-                session = self.training_sessions.setdefault(client_id, {})
-                session.setdefault('landmarks_history', [])
-                session.setdefault('predictions_history', [])
-                session['landmarks_history'].append(landmarks)
-                session['predictions_history'].append(prediction)
+                        results['repetition_is_correct'] = (
+                            classification.get('class') == 'correct'
+                        )
+                        results['repetition_confidence'] = classification.get('confidence', 0.0)
 
             except Exception as e:
                 print(f'Error en landmarks: {e}')

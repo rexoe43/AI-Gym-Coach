@@ -147,3 +147,93 @@ def extract_features_from_landmarks(landmarks):
     features['torso_length'] = float(np.linalg.norm(shoulder_center - hip_center))
 
     return features
+
+
+# ---------------------------------------------------------------------------
+# Repetition-level feature vector (matches training_model.py exactly)
+# ---------------------------------------------------------------------------
+# The trained model expects 90 features: 18 raw per-frame signals, each
+# aggregated with mean/std/min/max/range across an ENTIRE repetition.
+#   - 9 "position" signals (angles + torso_length)
+#   - 8 "velocity" signals (frame-to-frame delta of the position signals,
+#     EXCLUDING torso_length)
+#   - 1 "acceleration" signal (delta of velocity, ONLY knee_angle_right)
+# This must stay in sync with training_model.py's prepare_features().
+
+POSITION_KEYS = [
+    'knee_angle_right', 'knee_angle_left',
+    'hip_angle_right', 'hip_angle_left',
+    'elbow_angle_right', 'elbow_angle_left',
+    'shoulder_angle_right', 'shoulder_angle_left',
+    'torso_length',
+]
+
+VELOCITY_KEYS = [
+    'knee_angle_right', 'knee_angle_left',
+    'hip_angle_right', 'hip_angle_left',
+    'elbow_angle_right', 'elbow_angle_left',
+    'shoulder_angle_right', 'shoulder_angle_left',
+]
+
+ACCELERATION_KEYS_BY_EXERCISE = {
+    'squat': ['knee_angle_right'],
+    'pushup': ['elbow_angle_right'],
+}
+
+# All raw per-frame keys a caller needs to track across a repetition.
+RAW_SERIES_KEYS = list(dict.fromkeys(POSITION_KEYS + ['torso_angle']))
+
+
+def extract_raw_angles(landmarks):
+    """
+    Per-frame raw signals needed to build a repetition's feature vector later,
+    plus 'torso_angle' (not used by the ML model, kept only for the
+    heuristic fallback in score_squat_technique).
+    """
+    features = extract_features_from_landmarks(landmarks)
+    if features is None:
+        return None
+    return {key: features[key] for key in RAW_SERIES_KEYS}
+
+
+def _stats(vec, name, values):
+    arr = np.array(values, dtype=float)
+    if arr.size == 0:
+        arr = np.array([0.0])
+    vec[f'{name}_mean'] = float(np.mean(arr))
+    vec[f'{name}_std'] = float(np.std(arr))
+    vec[f'{name}_min'] = float(np.min(arr))
+    vec[f'{name}_max'] = float(np.max(arr))
+    vec[f'{name}_range'] = float(np.max(arr) - np.min(arr))
+
+
+def build_repetition_feature_vector(raw_series, exercise_type='squat'):
+    """
+    raw_series: dict like {'knee_angle_right': [v0, v1, v2, ...], ...}
+    collected across ALL frames of one repetition (from start of the
+    descent/bend to the top of the ascent/extension).
+
+    Returns a flat dict with the 90 keys the corresponding trained model
+    expects. Position (9) and velocity (8) groups are identical across
+    exercises; only the acceleration group's joint changes per exercise
+    (knee for squat, elbow for pushup) since that's the "depth" signal
+    that matters most for each movement.
+    """
+    vec = {}
+
+    for key in POSITION_KEYS:
+        _stats(vec, key, raw_series.get(key, []))
+
+    for key in VELOCITY_KEYS:
+        values = raw_series.get(key, [])
+        velocity = np.diff(values) if len(values) > 1 else np.array([0.0])
+        _stats(vec, f'{key}_velocity', velocity)
+
+    acceleration_keys = ACCELERATION_KEYS_BY_EXERCISE.get(exercise_type, ['knee_angle_right'])
+    for key in acceleration_keys:
+        values = raw_series.get(key, [])
+        velocity = np.diff(values) if len(values) > 1 else np.array([0.0])
+        acceleration = np.diff(velocity) if len(velocity) > 1 else np.array([0.0])
+        _stats(vec, f'{key}_acceleration', acceleration)
+
+    return vec
