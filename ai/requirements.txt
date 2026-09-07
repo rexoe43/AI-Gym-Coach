@@ -1,10 +1,6 @@
 # Core ML
 tensorflow==2.15.0
-<<<<<<< HEAD
-scikit-learn==1.5.0
-=======
 scikit-learn==1.4.1.post1
->>>>>>> 331b5c63 (Resolving errors)
 xgboost==2.0.3
 
 # Data Processing
@@ -31,14 +27,7 @@ python-multipart==0.0.31
 python-dotenv==1.2.2
 
 # Utilities
-<<<<<<< HEAD
-requests==2.33.0
-pydantic==2.6.0
-loguru==0.7.2
-pytest==9.0.3
-=======
 requests==2.31.0
 pydantic==2.6.0
 loguru==0.7.2
 pytest==7.4.4
->>>>>>> 331b5c63 (Resolving errors)
