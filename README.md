@@ -2,14 +2,9 @@
 
 ### Intelligent Exercise Analysis & Virtual Coaching System
 
-**AI Gym Coach** is an intelligent desktop application designed to analyze
-exercise technique using **Computer Vision, Machine Learning, and Large
-Language Models (LLMs)**.
+**AI Gym Coach** is an intelligent application designed to analyze exercise technique using **Computer Vision, Machine Learning, and Large Language Models (LLMs)**.
 
-The system uses a camera to detect the user's body pose, extract movement
-features, identify exercise patterns, count repetitions, detect predefined
-technique errors, and provide understandable feedback through an AI-powered
-assistant.
+The system uses a camera to detect the user's body pose, extract movement features, identify exercise patterns, count repetitions, detect predefined technique errors, and provide understandable feedback through an AI-powered assistant.
 
 ---
 
@@ -17,74 +12,58 @@ assistant.
 
 ### 🧠 AI-Powered Exercise Analysis
 
-AI Gym Coach analyzes exercise movements using Computer Vision and a
-Machine Learning model trained with data extracted from human movement.
+AI Gym Coach analyzes exercise movements using Computer Vision and a Machine Learning model trained with data extracted from human movement.
 
 The system is designed to identify patterns such as:
 
-Correct execution
-Incomplete range of motion
-Incorrect posture
-Other exercise-specific movement errors
+- Correct execution
+- Incomplete range of motion
+- Incorrect posture
+- Other exercise-specific movement errors
 
 ## 🎥 Real-Time Pose Detection
 
-The application uses the device camera to analyze the user's movement.
+The application uses the device camera to analyze the user's movement via MediaPipe Pose, which extracts body landmarks that can be used to calculate:
 
-MediaPipe Pose extracts body landmarks that can be used to calculate:
-
-Joint angles
-Relative positions
-Distances between joints
-Movement trajectory
-Velocity
-Temporal characteristics
+- Joint angles
+- Relative positions
+- Distances between joints
+- Movement trajectory
+- Velocity
+- Temporal characteristics
 
 The detected pose can also be displayed directly over the camera feed.
 
 ## 🔢 Intelligent Rep Counter
 
-Instead of relying on a simple timer, AI Gym Coach analyzes the different
-phases of an exercise to determine when a repetition has actually been
-completed.
+Instead of relying on a simple timer, AI Gym Coach analyzes the different phases of an exercise to determine when a repetition has actually been completed.
 The movement logic can be adapted to each supported exercise.
 
 ## 🏋️ Initial Exercise Program
 
 The first version of the system will use a simple PPL structure:
 
-PUSH
+- **PUSH** - Push-ups
+- **PULL** - Bicep Curls
+- **LEGS** - Squats
 
-Push-ups
-
-PULL
-
-Bicep Curls
-
-LEGS
-
-Squats
-
-The architecture is designed so additional exercises can be added without
-rewriting the entire system.
+The architecture is designed so additional exercises can be added without rewriting the entire system.
 
 ## 📊 Machine Learning Model
 
-The Machine Learning model will be trained using a custom dataset generated
-from exercise movements.
+The Machine Learning model will be trained using a custom dataset generated from exercise movements.
 
-The dataset will not initially use raw RGB images as the primary training
-data.
+The dataset will not initially use raw RGB images as the primary training data.
 Potential features include:
 
-Joint angles
-Normalized coordinates
-Joint distances
-Movement velocity
-Displacement
-Trajectory
-Movement duration
-Temporal features
+- Joint angles
+- Normalized coordinates
+- Joint distances
+- Movement velocity
+- Displacement
+- Trajectory
+- Movement duration
+- Temporal features
 
 The final features and model will be determined experimentally.
 
@@ -92,330 +71,357 @@ The final features and model will be determined experimentally.
 
 Different Machine Learning approaches can be evaluated, including:
 
-Random Forest
-Support Vector Machine (SVM)
-XGBoost
-Neural Networks
+- Random Forest
+- Support Vector Machine (SVM)
+- XGBoost
+- Neural Networks
 
 Models will be compared using real evaluation results.
 
 Main metrics:
 
-Accuracy
-Precision
-Recall
-F1-Score
-Confusion Matrix
+- Accuracy
+- Precision
+- Recall
+- F1-Score
+- Confusion Matrix
 
-No performance values will be reported until the models have actually been
-trained and evaluated.
+No performance values will be reported until the models have actually been trained and evaluated.
 
-## 🤖 AI Feedback with Llama 3.2
+## 🤖 AI Feedback with LLM Integration
 
-The system integrates Llama 3.2 through Ollama as an additional AI
-layer for explanation and feedback.
+The system integrates an LLM as an additional AI layer for explanation and feedback.
 
-The Machine Learning model determines the technical result.
+The Machine Learning model determines the technical result. The LLM can then transform this information into understandable, personalized feedback.
 
-For example:
+The LLM does not replace the Machine Learning model and does not directly determine whether an exercise was correctly performed.
 
-<img width="294" height="249" alt="image" src="https://github.com/user-attachments/assets/f6cfd07c-4d48-4dda-b19e-f3abf2426ad0" />
+## 🖥️ Web Application
 
+AI Gym Coach is built as a modern web application with a responsive interface that works across:
 
-Llama 3.2 can then transform this information into understandable feedback.
-
-The LLM does not replace the Machine Learning model and does not
-directly determine whether an exercise was correctly performed.
-
-## 🖥️ Desktop Application
-
-AI Gym Coach will be distributed as a desktop application using Tauri.
-
-The user interface is built with modern web technologies while remaining
-responsive across:
-
-Desktop
-Laptop
-Tablet
-Mobile-sized screens
-
-The primary target is desktop usage.
+- Desktop
+- Laptop
+- Tablet
+- Mobile-sized screens
 
 ## 🎨 Modern & Responsive Design
 
-The interface will use:
+The interface uses:
 
-React
-TypeScript
-Tailwind CSS
-Vite
+- **React 18** with TypeScript
+- **Tailwind CSS** for styling
+- **Vite** for build tooling
+- **Axios** for HTTP requests
+- **React Webcam** for camera access
 
-The design will focus on:
+The design focuses on:
 
-Clear exercise visualization
-Real-time training information
-Technique feedback
-Rep tracking
-Simple navigation
-Responsive layouts
-Modern dashboard
+- Clear exercise visualization
+- Real-time training information
+- Technique feedback
+- Rep tracking
+- Simple navigation
+- Responsive layouts
+- Modern dashboard
 
 ## 🚀 Technical Stack
 
-Built with a hybrid architecture combining modern web development,
-Python-based AI processing, Computer Vision, and local LLM inference.
+Built with a hybrid architecture combining modern web development, Python-based AI processing, and Computer Vision.
 
 | **Component**        | **Technology**         | **Description**                             |
 | -------------------- | ---------------------- | ------------------------------------------- |
-| **Frontend**         | **React + TypeScript** | User interface and application logic        |
+| **Frontend**         | **React 18 + TypeScript** | User interface and application logic        |
 | **Styling**          | **Tailwind CSS**       | Responsive UI and component styling         |
 | **Build Tool**       | **Vite**               | Frontend development and build system       |
-| **Desktop**          | **Tauri**              | Desktop application packaging               |
+| **HTTP Client**      | **Axios**              | API communication                           |
+| **Camera Access**    | **React Webcam**       | Real-time video streaming from device camera |
 | **Backend**          | **Python + FastAPI**   | API and AI processing layer                 |
+| **Real-time Communication** | **WebSockets**   | Live data streaming between frontend and backend |
 | **Computer Vision**  | **OpenCV**             | Video and frame processing                  |
 | **Pose Detection**   | **MediaPipe Pose**     | Human pose and landmark detection           |
 | **Machine Learning** | **TensorFlow / Keras** | Model training and inference                |
 | **Data Processing**  | **NumPy + Pandas**     | Dataset processing and numerical operations |
 | **ML Evaluation**    | **scikit-learn**       | Evaluation and preprocessing                |
-| **LLM**              | **Llama 3.2**          | AI-generated explanations and feedback      |
-| **LLM Runtime**      | **Ollama**             | Local LLM execution                         |
-| **Database**         | **SQLite (Optional)**  | Training history and statistics             |
+| **Optimization**     | **XGBoost**            | Advanced model training                     |
+| **LLM Integration**  | **Python requests**    | API-based LLM communication                 |
 
 ## 🏗️ System Architecture
 
-                                       AI GYM COACH
-                                            │
-                                            ▼
-                               ┌────────────────────────┐
-                               │ React + TypeScript     │
-                               │ Tailwind CSS + Vite    │
-                               └────────────┬───────────┘
-                                            │
-                                            ▼
-                                     ┌────────────┐
-                                     │   Tauri    │
-                                     └─────┬──────┘
-                                           │
-                                           ▼
-                                  ┌─────────────────┐
-                                  │     FastAPI     │
-                                  │     Python      │
-                                  └────────┬────────┘
-                                           │
-                           ┌───────────────┼────────────────┐
-                           │               │                │
-                           ▼               ▼                ▼
-                      ┌─────────┐    ┌───────────┐    ┌──────────┐
-                      │  OpenCV │    │ MediaPipe │    │ TensorFlow│
-                      └────┬────┘    └─────┬─────┘    └────┬─────┘
-                           │               │               │
-                           └───────────────┼───────────────┘
-                                           ▼
-                                  ┌─────────────────┐
-                                  │ Feature         │
-                                  │ Extraction      │
-                                  └────────┬────────┘
-                                           ▼
-                                  ┌─────────────────┐
-                                  │  ML Model       │
-                                  └────────┬────────┘
-                                           │
-                                  ┌────────┴────────┐
-                                  ▼                 ▼
-                             Rep Counter       Technique
-                                                    │
-                                                    ▼
-                                             Error Detection
-                                                    │
-                                                    ▼
-                                            Structured Results
-                                                    │
-                                                    ▼
-                                         ┌──────────────────┐
-                                         │ Llama 3.2        │
-                                         │ + Ollama         │
-                                         └────────┬─────────┘
-                                                  │
-                                                  ▼
-                                            AI Feedback
-                                                  │
-                                                  ▼
-                                         React Interface
-                                         
-                           
+```
+                                   AI GYM COACH
+                                        │
+                                        ▼
+                          ┌─────────────────────────┐
+                          │  React + TypeScript UI  │
+                          │  Tailwind CSS + Vite    │
+                          └────────────┬────────────┘
+                                       │
+                                       ▼
+                               ┌──────────────────┐
+                               │   WebSockets     │
+                               └────────┬─────────┘
+                                        │
+                                        ▼
+                               ┌──────────────────┐
+                               │   FastAPI        │
+                               │   Python         │
+                               └────────┬─────────┘
+                                        │
+                        ┌───────────────┼────────────────┐
+                        │               │                │
+                        ▼               ▼                ▼
+                   ┌─────────┐    ┌───────────┐    ┌──────────┐
+                   │ OpenCV  │    │ MediaPipe │    │TensorFlow│
+                   └────┬────┘    └─────┬─────┘    └────┬─────┘
+                        │               │               │
+                        └───────────────┼───────────────┘
+                                        ▼
+                               ┌──────────────────┐
+                               │ Feature          │
+                               │ Extraction       │
+                               └────────┬─────────┘
+                                        ▼
+                               ┌──────────────────┐
+                               │  ML Model        │
+                               └────────┬─────────┘
+                                        │
+                               ┌────────┴────────┐
+                               ▼                 ▼
+                          Rep Counter       Technique
+                                                 │
+                                                 ▼
+                                          Error Detection
+                                                 │
+                                                 ▼
+                                         Structured Results
+                                                 │
+                                                 ▼
+                                        ┌──────────────────┐
+                                        │ LLM Processing   │
+                                        └────────┬─────────┘
+                                                 │
+                                                 ▼
+                                           AI Feedback
+                                                 │
+                                                 ▼
+                                        React Interface
+```
+
 ## 🔄 AI Training Pipeline
-The Machine Learning development process follows this pipeline: 
 
-                                      ┌───────────────────┐
-                                      │ Exercise Videos   │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ OpenCV Processing │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ MediaPipe Pose    │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Body Landmarks    │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Feature Extraction│
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Labeled Dataset   │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Train / Validation│
-                                      │ / Test            │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Model Training    │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Model Evaluation  │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Selected Model    │
-                                      └─────────┬─────────┘
-                                                ↓
-                                      ┌───────────────────┐
-                                      │ Production Model  │
-                                      └───────────────────┘
+The Machine Learning development process follows this pipeline:
 
-Data leakage must be avoided during dataset splitting. Data from the same
-recording or person should not be distributed in a way that allows the
-model to simply memorize the subject.
+```
+                                   ┌───────────────────┐
+                                   │ Exercise Videos   │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ OpenCV Processing │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ MediaPipe Pose    │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Body Landmarks    │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Feature Extraction│
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Labeled Dataset   │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Train / Validation│
+                                   │ / Test Split      │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Model Training    │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Model Evaluation  │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Selected Model    │
+                                   └─────────┬─────────┘
+                                             ↓
+                                   ┌───────────────────┐
+                                   │ Production Model  │
+                                   └───────────────────┘
+```
+
+Data leakage must be avoided during dataset splitting. Data from the same recording or person should not be distributed in a way that allows the model to simply memorize the subject.
 
 ## 📂 Project Structure
 
-                  AI-Gym-Coach/
-                  │
-                  ├── frontend/                  # React application
-                  │   ├── src/
-                  │   │   ├── components/        # Reusable UI components
-                  │   │   ├── pages/             # Application pages
-                  │   │   ├── services/          # API communication
-                  │   │   ├── hooks/             # Custom React hooks
-                  │   │   └── types/             # TypeScript types
-                  │   ├── package.json
-                  │   └── vite.config.ts
-                  │
-                  ├── backend/                   # Python backend
-                  │   ├── app/
-                  │   │   ├── api/               # API routes
-                  │   │   ├── services/          # Business logic
-                  │   │   ├── computer_vision/   # OpenCV / MediaPipe
-                  │   │   ├── ml/                # ML inference
-                  │   │   └── llm/               # Ollama integration
-                  │   └── requirements.txt
-                  │
-                  ├── ai/                        # Machine Learning pipeline
-                  │   ├── dataset/               # Dataset and metadata
-                  │   ├── preprocessing/         # Data preprocessing
-                  │   ├── features/              # Feature extraction
-                  │   ├── training/              # Model training
-                  │   ├── evaluation/            # Model evaluation
-                  │   └── models/                # Trained models
-                  │
-                  ├── desktop/                   # Tauri configuration
-                  │   └── tauri/
-                  │
-                  ├── docs/                      # Project documentation
-                  │
-                  ├── .gitignore
-                  ├── README.md
-                  └── LICENSE
+```
+AI-Gym-Coach/
+│
+├── Frontend/                      # React web application
+│   ├── src/
+│   │   ├── components/            # Reusable UI components
+│   │   ├── pages/                 # Application pages
+│   │   ├── hooks/                 # Custom React hooks
+│   │   ├── App.jsx                # Main application component
+│   │   ├── main.jsx               # Entry point
+│   │   └── index.css              # Global styles
+│   ├── index.html                 # HTML entry point
+│   ├── package.json               # Frontend dependencies
+│   ├── vite.config.js             # Vite configuration
+│   ├── tailwind.config.js         # Tailwind CSS configuration
+│   └── postcss.config.js          # PostCSS configuration
+│
+├── Backend/                       # Python FastAPI backend
+│   ├── app/
+│   │   ├── main.py                # FastAPI application entry point
+│   │   ├── websocket_manager.py   # WebSocket connection management
+│   │   ├── pose_detector.py       # MediaPipe pose detection
+│   │   ├── feature_extractor.py   # Feature extraction from pose data
+│   │   ├── model_loader.py        # ML model loading and management
+│   │   ├── predictor.py           # Model prediction logic
+│   │   ├── repetition_counter.py  # Exercise rep counting
+│   │   └── services/              # Business logic services
+│   ├── models/                    # Pre-trained model storage
+│   ├── .env                       # Environment variables
+│   └── requirements.txt           # Backend dependencies
+│
+├── ai/                            # Machine Learning pipeline & utilities
+│   ├── dataset/                   # Training datasets and metadata
+│   ├── preprocessing/             # Data preprocessing scripts
+│   ├── features/                  # Feature extraction utilities
+│   ├── training/                  # Model training scripts
+│   ├── models/                    # Trained model files
+│   └── requirements.txt           # ML pipeline dependencies
+│
+├── docs/                          # Project documentation
+│
+├── .gitignore
+├── README.md
+└── LICENSE
+```
 
+### Directory Descriptions
+
+**Frontend/**
+- Contains the React web application
+- Handles user interface and real-time camera feed visualization
+- Communicates with backend via REST API and WebSockets
+- Styling with Tailwind CSS, built with Vite
+
+**Backend/app/**
+- `main.py` - FastAPI server setup and route definitions
+- `websocket_manager.py` - Manages WebSocket connections for real-time data streaming
+- `pose_detector.py` - Integrates MediaPipe to detect body landmarks
+- `feature_extractor.py` - Calculates joint angles and features from pose data
+- `model_loader.py` - Loads and manages TensorFlow/Keras models
+- `predictor.py` - Makes predictions using loaded models
+- `repetition_counter.py` - Tracks and counts exercise repetitions based on movement phases
+- `services/` - Modular business logic for specific features
+
+**Backend/models/**
+- Stores pre-trained ML models for inference during application runtime
+
+**ai/**
+- `dataset/` - Raw and processed training data
+- `preprocessing/` - Scripts for data cleaning and normalization
+- `features/` - Feature engineering and extraction utilities
+- `training/` - Model training pipelines and experiment tracking
+- `models/` - Generated trained models after training pipeline completion
 
 ## 🛠️ Installation & Setup
-Prerequisites
+
+### Prerequisites
 
 Make sure the following tools are installed:
 
-    Python 3.x
-    Node.js
-    npm
-    Rust
-    Tauri
-    Ollama
-    Git
+- Python 3.8+
+- Node.js 16+
+- npm or yarn
+- Git
 
-1. Clone the repository
+### 1. Clone the repository
 
-        git clone <repository_url>
-        cd AI-Gym-Coach
-2. Backend Setup
+```bash
+git clone https://github.com/rexoe43/AI-Gym-Coach.git
+cd AI-Gym-Coach
+```
 
-Create a Python virtual environment:
+### 2. Backend Setup
 
-    python -m venv .venv
+Create and activate a Python virtual environment:
 
-Activate it:
+```bash
+python -m venv .venv
 
-Windows:
+# On Windows:
+.venv\Scripts\activate
 
-    .venv\Scripts\activate
+# On Linux/macOS:
+source .venv/bin/activate
+```
 
-Linux / macOS:
+Install Python dependencies:
 
-    source .venv/bin/activate
+```bash
+pip install -r Backend/requirements.txt
+```
 
-Install dependencies:
+Start the FastAPI server:
 
-    pip install -r backend/requirements.txt
+```bash
+uvicorn Backend.app.main:app --reload
+```
 
-Run the FastAPI server:
+The backend will be available at `http://localhost:8000`
 
-    uvicorn backend.app.main:app --reload
+### 3. Frontend Setup
 
-3. Frontend Setup
-   
-        cd frontend
-        npm install
-        npm run dev
-   
-5. Ollama Setup
+Install Node.js dependencies:
 
-Install Ollama and download the configured LLM:
+```bash
+cd Frontend
+npm install
+```
 
-    ollama pull llama3.2
+Start the development server:
 
-Start Ollama:
+```bash
+npm run dev
+```
 
-    ollama serve
+The frontend will typically be available at `http://localhost:5173`
 
-5. Desktop Application
+### 4. ML Pipeline Setup (Optional for training)
 
-Once the frontend and backend are configured:
+If you want to work with model training:
 
-    npm run tauri dev
-
-The exact commands may change as the project structure evolves.
+```bash
+pip install -r ai/requirements.txt
+```
 
 ## ⚠️ Limitations
 
-AI Gym Coach is an academic project and is not intended to replace a
-professional personal trainer or provide medical advice.
+AI Gym Coach is an academic project and is not intended to replace a professional personal trainer or provide medical advice.
 
 The accuracy of the system may depend on:
 
-Camera position
-Lighting conditions
-Visibility of the body
-Clothing
-Camera quality
-Dataset size
-Dataset diversity
-Exercise complexity
+- Camera position and angle
+- Lighting conditions
+- Visibility of the body
+- Clothing and obstructions
+- Camera quality and resolution
+- Dataset size and diversity
+- Exercise complexity
+- User body type variations
 
 These limitations will be evaluated during development.
 
@@ -425,18 +431,33 @@ The project is designed with local processing in mind.
 
 Whenever possible:
 
-Video processing should occur locally.
-LLM inference should occur locally through Ollama.
-Personal videos should not be uploaded to external services.
-Sensitive credentials must never be committed to Git.
+- Video processing occurs locally on the user's device
+- LLM inference is handled through external API calls
+- Personal videos are not uploaded to external services
+- Sensitive credentials must never be committed to Git
 
-Environment variables and secrets should be stored outside version
-control.
+Environment variables and secrets should be stored in `.env` files outside version control.
 
 ## 📌 Project Status
 
-🚧 Currently in development
+🚧 **Currently in development**
 
-The repository currently represents the planned architecture and development
-roadmap. Model performance metrics and final implementation details will be
-added after the corresponding components have been implemented and tested.
+The repository currently represents the planned architecture and development roadmap. Model performance metrics and final implementation details will be added after the corresponding components have been implemented and tested.
+
+### Development Roadmap
+
+- [x] Initial project structure setup
+- [x] Frontend React application scaffold
+- [x] FastAPI backend with WebSocket support
+- [x] MediaPipe pose detection integration
+- [x] Feature extraction pipeline
+- [ ] ML model training and evaluation
+- [ ] Exercise rep counter refinement
+- [ ] Technique error detection
+- [ ] LLM feedback integration
+- [ ] Production deployment
+
+---
+
+**Last Updated:** September 2026  
+**License:** MIT
