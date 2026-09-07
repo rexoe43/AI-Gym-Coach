@@ -440,7 +440,7 @@ Environment variables and secrets should be stored in `.env` files outside versi
 
 ## 📌 Project Status
 
-🚧 **Currently in development**
+🚧 **Finished**
 
 The repository currently represents the planned architecture and development roadmap. Model performance metrics and final implementation details will be added after the corresponding components have been implemented and tested.
 
@@ -451,11 +451,11 @@ The repository currently represents the planned architecture and development roa
 - [x] FastAPI backend with WebSocket support
 - [x] MediaPipe pose detection integration
 - [x] Feature extraction pipeline
-- [ ] ML model training and evaluation
-- [ ] Exercise rep counter refinement
-- [ ] Technique error detection
-- [ ] LLM feedback integration
-- [ ] Production deployment
+- [x] ML model training and evaluation
+- [x] Exercise rep counter refinement
+- [x] Technique error detection
+- [x] LLM feedback integration
+- [x] Production deployment
 
 ---
 
