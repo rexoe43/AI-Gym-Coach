@@ -41,10 +41,9 @@ The movement logic can be adapted to each supported exercise.
 
 ## 🏋️ Initial Exercise Program
 
-The first version of the system will use a simple PPL structure:
+The first version of the system will use a simple PL structure:
 
 - **PUSH** - Push-ups
-- **PULL** - Bicep Curls
 - **LEGS** - Squats
 
 The architecture is designed so additional exercises can be added without rewriting the entire system.
@@ -440,10 +439,10 @@ Environment variables and secrets should be stored in `.env` files outside versi
 
 ## 📌 Project Status
 
-🚧 **Finished**
+✅ **Project Complete & Deployed**
 
-The repository currently represents the planned architecture and development roadmap. Model performance metrics and final implementation details will be added after the corresponding components have been implemented and tested.
-
+The AI Gym Coach application is fully functional and has been successfully tested and deployed. 
+All core features are implemented and working as intended.
 ### Development Roadmap
 
 - [x] Initial project structure setup
