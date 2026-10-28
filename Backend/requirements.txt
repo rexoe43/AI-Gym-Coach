@@ -39,4 +39,4 @@ loguru==0.7.2
 
 # Development
 pytest==7.4.4
-black==23.12.1
+black==26.10.1
